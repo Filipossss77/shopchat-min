@@ -27,6 +27,14 @@ WIDGET_JS = """
   const field = document.createElement('input'); field.placeholder='Napíš správu...';
   const send = document.createElement('button'); send.innerText='Poslať';
   input.append(field, send); panel.append(header, body, input); document.body.append(bubble, panel);
+  // auto-open iba pri prvej návšteve
+try {
+  if (!localStorage.getItem('gavatep_chat_opened')) {
+    panel.style.display = 'flex';
+    localStorage.setItem('gavatep_chat_opened','1');
+  }
+} catch(e){}
+
 
   function show(){ panel.style.display='flex'; }
   function hide(){ panel.style.display='none'; }
