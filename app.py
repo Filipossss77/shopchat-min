@@ -14,20 +14,50 @@ INTENTS = {
 SUGGESTIONS = ["CENNÍK", "SVETLOMETY", "PPF", "TERMÍN"]
 
 # --- Mini widget (CSS/JS) ---
-WIDGET_CSS = """
-#shopchat-bubble{position:fixed;right:20px;bottom:20px;width:56px;height:56px;border-radius:50%;box-shadow:0 8px 24px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;cursor:pointer;background:#111;color:#fff;font:600 20px/1 system-ui;z-index:9999}
-#shopchat-panel{position:fixed;right:20px;bottom:90px;width:340px;max-width:92vw;height:480px;max-height:70vh;background:#fff;border-radius:16px;box-shadow:0 20px 40px rgba(0,0,0,.25);display:none;flex-direction:column;overflow:hidden;z-index:9999}
-#shopchat-header{padding:12px;background:#111;color:#fff;font:600 14px system-ui;display:flex;align-items:center;justify-content:space-between}
-#shopchat-body{flex:1;padding:12px;overflow:auto;background:#fafafa}
-#shopchat-input{display:flex;gap:8px;padding:10px;background:#fff;border-top:1px solid #eee}
-#shopchat-input input{flex:1;padding:10px 12px;border:1px solid #ddd;border-radius:10px;font:14px system-ui}
-#shopchat-input button{padding:10px 12px;border-radius:10px;border:0;background:#111;color:#fff;font:600 14px system-ui}
-.msg{max-width:80%;margin:6px 0;padding:10px 12px;border-radius:12px;font:14px/1.3 system-ui}
-.msg.user{background:#dff0ff;margin-left:auto}
-.msg.bot{background:#fff;border:1px solid #eee}
-.suggestions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.suggestions button{border:1px solid #ddd;background:#fff;padding:6px 8px;border-radius:999px;font:12px system-ui;cursor:pointer}
+WIDGET_JS = """
+(function(){
+  const API = (window.SHOPCHAT_API || "/api/message");
+
+  const bubble = document.createElement('div'); bubble.id='shopchat-bubble'; bubble.innerText='Chat';
+  const panel = document.createElement('div'); panel.id='shopchat-panel';
+  const header = document.createElement('div'); header.id='shopchat-header';
+  header.innerHTML='<span>GaVaTep Chat</span><button id="shopchat-close" style="background:transparent;border:0;color:#d4af37;font-size:16px;cursor:pointer">x</button>';
+  const body = document.createElement('div'); body.id='shopchat-body';
+  const input = document.createElement('div'); input.id='shopchat-input';
+  const field = document.createElement('input'); field.placeholder='Napíš správu...';
+  const send = document.createElement('button'); send.innerText='Poslať';
+  input.append(field, send); panel.append(header, body, input); document.body.append(bubble, panel);
+
+  function show(){ panel.style.display='flex'; }
+  function hide(){ panel.style.display='none'; }
+  bubble.onclick=show; header.querySelector('#shopchat-close').onclick=hide;
+
+  function addMsg(text, who){
+    const m=document.createElement('div'); m.className='msg '+who; m.textContent=text;
+    body.appendChild(m); body.scrollTop=body.scrollHeight;
+  }
+  function addSuggestions(items){
+    const wrap=document.createElement('div'); wrap.className='suggestions';
+    items.forEach(t=>{ const b=document.createElement('button'); b.textContent=t; b.onclick=()=>{ field.value=t; send.click(); }; wrap.appendChild(b); });
+    body.appendChild(wrap);
+  }
+
+  // greeting
+  addMsg('Ahoj! Pomôžem s cenníkom, termínom alebo PPF.', 'bot');
+  addSuggestions(['CENNÍK','SVETLOMETY','PPF','TERMÍN']);
+
+  async function ask(text){
+    addMsg(text,'user'); field.value='';
+    const r = await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+    const j = await r.json();
+    addMsg(j.reply || 'Skús to ešte raz 🙂', 'bot');
+  }
+
+  send.onclick=()=>{ if(field.value.trim()) ask(field.value.trim()); };
+  field.addEventListener('keydown',e=>{ if(e.key==='Enter') send.click(); });
+})();
 """
+
 
 WIDGET_CSS = """
 #shopchat-bubble{
