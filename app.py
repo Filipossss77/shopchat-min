@@ -68,8 +68,17 @@ WIDGET_JS = r"""
     <div id='shopchat-body'></div>
     <div id='shopchat-input'><input placeholder='Napíš správu...'><button aria-label='Poslať'>Poslať</button></div>
   `;
-  document.body.appendChild(panel);
-  panel.style.display='none';
+ // zvuk pri otvorení + automatické otvorenie
+const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+function openChat(){
+  panel.style.display = 'flex';
+  audio.currentTime = 0;
+  audio.play().catch(()=>{});
+}
+window.addEventListener('load', ()=>{
+  openChat();
+});
+
 
   const body=panel.querySelector('#shopchat-body');
   const input=panel.querySelector('input');
@@ -249,7 +258,8 @@ WIDGET_CSS = r"""
   display:none;flex-direction:column;overflow:hidden;z-index:999998;font-family:var(--font);
 }
 #shopchat-header{padding:12px 14px;background:var(--bg2);color:var(--gold);display:flex;justify-content:space-between;align-items:center;font-weight:700;border-bottom:1px solid var(--muted);}
-#shopchat-header button{background:none;border:none;color:var(--gold);font-size:18px;cursor:pointer;}
+#shopchat-header{padding:12px 14px;background:linear-gradient(90deg,#0f0f10 0%,#1a1a1b 40%,#0f0f10 80%);color:var(--gold);display:flex;justify-content:space-between;align-items:center;font-weight:700;border-bottom:1px solid var(--muted);border-top:1px solid var(--gold);background-size:200% 200%;animation:shimmer 4s linear infinite;}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 #shopchat-body{flex:1;padding:12px;overflow:auto;background:var(--bg);color:var(--text);}
 #shopchat-input{display:flex;gap:8px;padding:10px;background:var(--bg2);border-top:1px solid var(--muted);}
 #shopchat-input input{flex:1;padding:10px 12px;border:1px solid var(--muted);border-radius:10px;background:var(--bg);color:var(--text);}
