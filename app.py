@@ -217,25 +217,31 @@ async def message(payload: dict):
         subject = "Žiadosť o termín - web chat"
         body = f"Správa od návštevníka:\n\n{raw}"
         ok = send_mail(subject=subject, body=body)
+
         if ok:
-            return JSONResponse({"reply": "Ďakujem! Poslal som to do e-mailu. Ozveme sa čoskoro. 📬"})
+            return JSONResponse({
+                "reply": "Ďakujem! Poslal som to do e-mailu. Ozveme sa čoskoro. 📬"
+            })
         else:
-            return JSONResponse({"reply": "Mrzí ma to, e-mail sa nepodarilo odoslať. Skúste prosím ešte raz alebo nás kontaktujte telefonicky."})
+            return JSONResponse({
+                "reply": "Mrzí ma to, e-mail sa nepodarilo odoslať. Skúste prosím ešte raz alebo nás kontaktujte telefonicky."
+            })
 
-    # --- Pôvodná logika – ostáva bez zmeny ---
-   if "cenn" in low:
-    reply = INTENTS["cenník"]
-elif "svetlo" in low:
-    reply = INTENTS["renovácia svetlometov"]
-elif "ppf" in low:
-    reply = INTENTS["ochranná ppf fólia quap"]
-elif "term" in low or "rezerv" in low:
-    reply = INTENTS["termín"]
-else:
-    reply = "Rozumiem. Môžem poslať cenník, voľné termíny alebo info o PPF."
-
+    # --- Pôvodná logika – odpovede podľa kľúčových slov ---
+    if "cenn" in low:
+        reply = INTENTS["cenník"]
+    elif "svetlo" in low:
+        reply = INTENTS["renovácia svetlometov"]
+    elif "ppf" in low:
+        reply = INTENTS["ochranná ppf fólia quap"]
+    elif "term" in low or "rezerv" in low:
+        reply = INTENTS["termín"]
+    else:
+        reply = "Rozumiem. Môžem poslať cenník, voľné termíny alebo info o PPF."
 
     return JSONResponse({"reply": reply, "suggestions": SUGGESTIONS})
+
+
 
 @app.get("/widget.css")
 async def widget_css():
