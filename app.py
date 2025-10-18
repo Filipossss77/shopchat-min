@@ -6,11 +6,15 @@ import os
 
 # --- Jednoduché odpovede (uprav podľa seba) ---
 INTENTS = {
-    "cennik": "💶 Interiér od 120€, jednokrokové leštenie od 200€, svetlomety od 30€/ks.Bez ochrany proti UV",
-    "svetlomety": "🔦 Renovácia: brúsenie + leštenie + ochrana (60–90 min).",
-    "ppf": "🛡️ PPF (QUAP): ochrana proti mikroškrabancom a kamienkom.",
-    "termín": "📅 Pošli model auta + preferovaný dátum/čas, ozveme sa."
+    "termín": "📅 Rád ti pomôžem s termínom. Pošli mi model auta a dátum, ktorý ti vyhovuje, a ozveme sa.",
+    "renovácia svetlometov": "✨ Robíme brúsenie, leštenie aj ochranu svetlometov. Trvá to približne 200 minút.Všetko potrebne najdes sekcia cenník.",
+    "čistenie interiéru": "🧽 Hĺbkové čistenie interiéru — sedačky, plasty, koberce aj všetky detaily.Všetko potrebne najdes sekcia cenník.",
+    "čistenie exteriéru": "🚗 Umývanie karosérie, dekontaminácia laku a aplikácia vosku alebo ochrany.",
+    "keramická ochrana": "🛡️ Keramická ochrana chráni lak, disky a okná až na 5 rokov. Lesk a ochrana v jednom.",
+    "ochranná ppf fólia quap": "💎 Ochranná fólia Quap chráni lak pred kamienkami, škrabancami a UV žiarením.Všetko potrebne najdes sekcia cenník.",
+    "cenník": "<a href='https://gabatep.eu/cennik' target='_blank'>💰 Otvor stránku Cenník</a>",
 }
+
 SUGGESTIONS = ["CENNÍK", "SVETLOMETY", "PPF", "TERMÍN"]
 
 # --- Mini widget (CSS/JS) ---
