@@ -1,8 +1,50 @@
-
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import ssl
+import smtplib
+from email.message import EmailMessage
+
+SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
+SMTP_USER = os.getenv("SMTP_USER", "tepovacieprace.gava@gmail.com")
+SMTP_PASS = os.getenv("SMTP_PASS", "")
+SMTP_FROM = os.getenv("SMTP_FROM", SMTP_USER)
+SMTP_TO   = os.getenv("SMTP_TO", "tepovacieprace.gava@gmail.com")
+
+def send_mail(subject: str, body: str, to: str = None) -> bool:
+    """Jednoduché odoslanie mailu cez SMTP. Vráti True/False."""
+    try:
+        to = to or SMTP_TO
+        if not (SMTP_HOST and SMTP_USER and SMTP_PASS and to):
+            print("MAIL: chýba SMTP konfigurácia")
+            return False
+
+        msg = EmailMessage()
+        msg["From"] = SMTP_FROM or SMTP_USER
+        msg["To"] = to
+        msg["Subject"] = subject
+        msg.set_content(body)
+
+        if SMTP_PORT == 465:
+            # SSL pripojenie
+            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=ssl.create_default_context()) as s:
+                s.login(SMTP_USER, SMTP_PASS)
+                s.send_message(msg)
+        else:
+            # STARTTLS
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as s:
+                s.starttls(context=ssl.create_default_context())
+                s.login(SMTP_USER, SMTP_PASS)
+                s.send_message(msg)
+
+        return True
+    except Exception as e:
+        print("MAIL_ERROR:", e)
+        return False
+
+
 
 # --- Jednoduché odpovede (uprav podľa seba) ---
 INTENTS = {
@@ -37,12 +79,12 @@ WIDGET_JS = """
   document.body.append(bubble, panel);
 
   // auto-open iba pri prvej návšteve
-  try {
-    if (!localStorage.getItem('gavatep_chat_opened')) {
-      panel.style.display = 'flex';
-      localStorage.setItem('gavetaep_chat_opened', '1');
-    }
-  } catch(e){}
+try {
+  if (!localStorage.getItem('gavatep_chat_opened')) {
+    panel.style.display = 'flex';
+    localStorage.setItem('gavatep_chat_opened', '1');
+  }
+} catch(e){}
 
   function show(){ panel.style.display='flex'; }
   function hide(){ panel.style.display='none'; }
@@ -166,17 +208,33 @@ app.add_middleware(
 
 @app.post("/api/message")
 async def message(payload: dict):
-    text = (payload.get("text") or "").strip().lower()
-    if "cenn" in text:
-        reply = INTENTS["cennik"]
-    elif "svetlo" in text:
-        reply = INTENTS["svetlomety"]
-    elif "ppf" in text:
-        reply = INTENTS["ppf"]
-    elif "term" in text or "rezerv" in text:
-        reply = INTENTS["termín"]
-    else:
-        reply = "Rozumiem. Môžem poslať cenník, voľné termíny alebo info o PPF."
+    # Pôvodný text a jeho lowercase varianta
+    raw = (payload.get("text") or "").strip()
+    low = raw.lower()
+
+    # --- Špeciál: žiadosť o termín posielame e-mailom ---
+    if low.startswith("termín:") or low.startswith("termin:"):
+        subject = "Žiadosť o termín - web chat"
+        body = f"Správa od návštevníka:\n\n{raw}"
+        ok = send_mail(subject=subject, body=body)
+        if ok:
+            return JSONResponse({"reply": "Ďakujem! Poslal som to do e-mailu. Ozveme sa čoskoro. 📬"})
+        else:
+            return JSONResponse({"reply": "Mrzí ma to, e-mail sa nepodarilo odoslať. Skúste prosím ešte raz alebo nás kontaktujte telefonicky."})
+
+    # --- Pôvodná logika – ostáva bez zmeny ---
+   if "cenn" in low:
+    reply = INTENTS["cenník"]
+elif "svetlo" in low:
+    reply = INTENTS["renovácia svetlometov"]
+elif "ppf" in low:
+    reply = INTENTS["ochranná ppf fólia quap"]
+elif "term" in low or "rezerv" in low:
+    reply = INTENTS["termín"]
+else:
+    reply = "Rozumiem. Môžem poslať cenník, voľné termíny alebo info o PPF."
+
+
     return JSONResponse({"reply": reply, "suggestions": SUGGESTIONS})
 
 @app.get("/widget.css")
