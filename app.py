@@ -81,9 +81,9 @@ WIDGET_JS = r"""
     return d;
   }
 
-  function addButtons(labels,onClick){
+  function addButtons(labels,onClick,cls='actions'){
     const wrap=document.createElement('div');
-    wrap.className='actions';
+    wrap.className=cls;
     labels.forEach(label=>{
       const b=document.createElement('button');
       b.textContent=label;
@@ -94,24 +94,41 @@ WIDGET_JS = r"""
     body.scrollTop=body.scrollHeight;
   }
 
+  // === ÚPRAVA: PPF follow-up s väčšími rozostupmi + otázka na kontakt ===
   function showPPFQuestion(){
     addMsg("Chceš spraviť cenník na svoje auto?",'bot');
     addButtons(["Áno","Nie"],(answer,wrap)=>{
       addMsg(answer,'user');
       wrap.remove();
       if(answer==="Áno"){
-        const pricing=[
-          "ŠTANDARD — (kapota, predný nárazník, predné svetlá, spätné zrkadlá) — od 800€",
-          "PREMIUM — (kapota, predný nárazník, predné blatníky, predné svetlá, spätné zrkadlá, predná strecha, A stĺpiky) — od 1200€",
-          "KOMPLET — (celé auto) — od 2400€",
-          "INDIVIDUÁL — (balík na mieru vyskladaný podľa vás) — cena dohodou"
-        ].join("\\n");
+        const pricing =
+          "ŠTANDARD\\n" +
+          "(kapota, predný nárazník, predné svetlá, spätné zrkadlá) — od 800€\\n\\n" +
+          "PREMIUM\\n" +
+          "(kapota, predný nárazník, predné blatníky, predné svetlá, spätné zrkadlá, predná strecha, A stĺpiky) — od 1200€\\n\\n" +
+          "KOMPLET\\n" +
+          "(celé auto) — od 2400€\\n\\n" +
+          "INDIVIDUÁL\\n" +
+          "(balík na mieru vyskladaný podľa vás) — cena dohodou";
         addMsg(pricing,'bot');
+
+        // NOVÉ: otázka na kontakt po cenníku
+        addMsg("Chceš nás kontaktovať?", 'bot');
+        addButtons(["Áno","Nie"], (ans2, wrap2)=>{
+          addMsg(ans2, 'user');
+          wrap2.remove();
+          if(ans2==="Áno"){
+            window.location.href = "https://www.gavatep.eu/kontakt/";
+          } else {
+            addMsg("Jasné. Keď budeš chcieť, klikni na Cenník alebo napíš model auta a pripravíme presnú cenu. 🙂", 'bot');
+          }
+        }, 'actions contact');
       } else {
         addMsg("OK — ak chceš neskôr, ozvi sa, alebo napíš model auta a vyrobíme presnú kalkuláciu. 🙂",'bot');
       }
     });
   }
+  // === KONIEC ÚPRAVY ===
 
   function addSuggestions(){
     const b=document.createElement('div');b.className='suggestions';
@@ -165,7 +182,7 @@ WIDGET_JS = r"""
     if(RESPONSES[low]){
       setTimeout(()=>{
         addMsg(RESPONSES[low],'bot');
-        if(/ppf/.test(low))showPPFQuestion();
+        if(/ppf/.test(low)) showPPFQuestion();
       },150);
       return;
     }
@@ -244,7 +261,8 @@ async def message(payload: dict):
     elif "keram" in text:
         reply = INTENTS["keramická ochrana"]
     elif "ppf" in text or "fólia" in text or "folia" in text:
-        reply = INTENTS["ochranná пpf fólia quap"]
+        reply = INTENTS["ochranná ppf fólia quap"]
     else:
         reply = "Rozumiem. Môžem poslať info o službách alebo cenník."
     return JSONResponse({"reply": reply, "suggestions": SUGGESTIONS})
+
