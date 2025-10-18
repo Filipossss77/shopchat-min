@@ -58,7 +58,7 @@ WIDGET_JS = r"""
   // 💬 bublina vpravo dole
   const bubble = document.createElement('div');
   bubble.id = 'shopchat-bubble';
-  bubble.innerHTML = '💬';
+  bubble.innerHTML = 'Chat';
   document.body.appendChild(bubble);
 
   const panel=document.createElement('div');
