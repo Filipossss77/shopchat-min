@@ -49,9 +49,34 @@ try {
     body.appendChild(m); body.scrollTop=body.scrollHeight;
   }
   function addSuggestions(items){
-    const wrap=document.createElement('div'); wrap.className='suggestions';
-    items.forEach(t=>{ const b=document.createElement('button'); b.textContent=t; b.onclick=()=>{ field.value=t; send.click(); }; wrap.appendChild(b); });
-    body.appendChild(wrap);
+  const wrap = document.createElement('div');
+  wrap.className = 'suggestions';
+
+  items.forEach((t) => {
+    const b = document.createElement('button');
+    b.textContent = t;
+
+    // Špeciálne správanie pre "Cenník"
+    if (t.toLowerCase() === 'cenník' || t.toLowerCase() === 'cennik') {
+      b.addEventListener('click', (e) => {
+        e.preventDefault();
+        // otvorí cenník v novej karte
+        window.open('https://gabatep.eu/cennik', '_blank', 'noopener');
+      });
+    } else {
+      // pôvodné správanie – pošle text ako správu
+      b.addEventListener('click', () => {
+        field.value = t;
+        send.click();
+      });
+    }
+
+    wrap.appendChild(b);
+  });
+
+  body.appendChild(wrap);
+}
+
   }
 
   // greeting
