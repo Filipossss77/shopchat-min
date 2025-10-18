@@ -55,6 +55,7 @@ WIDGET_JS = r"""
     "ochranná ppf fólia quap": `""" + INTENTS["ochranná ppf fólia quap"] + """`
   };
 
+  // 💬 bublina vpravo dole
   const bubble = document.createElement('div');
   bubble.id = 'shopchat-bubble';
   bubble.innerHTML = '💬';
@@ -63,7 +64,7 @@ WIDGET_JS = r"""
   const panel=document.createElement('div');
   panel.id='shopchat-panel';
   panel.innerHTML=`
-    <div id='shopchat-header'><span>Chat</span><button id='closechat' aria-label='Zavrieť'>×</button></div>
+    <div id='shopchat-header'><span>GaVaTep</span><button id='closechat' aria-label='Zavrieť'>×</button></div>
     <div id='shopchat-body'></div>
     <div id='shopchat-input'><input placeholder='Napíš správu...'><button aria-label='Poslať'>Poslať</button></div>
   `;
@@ -77,6 +78,7 @@ WIDGET_JS = r"""
   function addMsg(txt,who){
     const d=document.createElement('div');
     d.className='msg '+who;
+    // povolíme iba odkazy a naše PPF karty
     if(who==='bot' && /<a\s|class="ppf-cards"/i.test(txt)) d.innerHTML=txt;
     else d.textContent=txt;
     body.appendChild(d);
@@ -96,6 +98,7 @@ WIDGET_JS = r"""
     body.scrollTop=body.scrollHeight;
   }
 
+  // PPF: cenník ako karty + následná otázka na kontakt
   function showPPFPricingFlow(){
     addMsg("Chceš spraviť cenník na svoje auto?",'bot');
     addButtons(["Áno","Nie"],(answer,wrap)=>{
@@ -104,12 +107,29 @@ WIDGET_JS = r"""
       if(answer==="Áno"){
         const cards = `
 <div class="ppf-cards">
-  <div class="ppf-card"><div class="t">ŠTANDARD</div><div class="d">(kapota, predný nárazník, predné svetlá, spätné zrkadlá)</div><div class="p">od 800€</div></div>
-  <div class="ppf-card"><div class="t">PREMIUM</div><div class="d">(kapota, predný nárazník, predné blatníky, predné svetlá, spätné zrkadlá, predná strecha, A stĺpiky)</div><div class="p">od 1200€</div></div>
-  <div class="ppf-card"><div class="t">KOMPLET</div><div class="d">(celé auto)</div><div class="p">od 2400€</div></div>
-  <div class="ppf-card"><div class="t">INDIVIDUÁL</div><div class="d">(balík na mieru vyskladaný podľa vás)</div><div class="p">cena dohodou</div></div>
+  <div class="ppf-card">
+    <div class="t">ŠTANDARD</div>
+    <div class="d">(kapota, predný nárazník, predné svetlá, spätné zrkadlá)</div>
+    <div class="p">od 800€</div>
+  </div>
+  <div class="ppf-card">
+    <div class="t">PREMIUM</div>
+    <div class="d">(kapota, predný nárazník, predné blatníky, predné svetlá, spätné zrkadlá, predná strecha, A stĺpiky)</div>
+    <div class="p">od 1200€</div>
+  </div>
+  <div class="ppf-card">
+    <div class="t">KOMPLET</div>
+    <div class="d">(celé auto)</div>
+    <div class="p">od 2400€</div>
+  </div>
+  <div class="ppf-card">
+    <div class="t">INDIVIDUÁL</div>
+    <div class="d">(balík na mieru vyskladaný podľa vás)</div>
+    <div class="p">cena dohodou</div>
+  </div>
 </div>`;
         addMsg(cards,'bot');
+
         addMsg("Chceš nás kontaktovať?", 'bot');
         addButtons(["Áno","Nie"], (ans2, wrap2)=>{
           addMsg(ans2,'user');
@@ -126,6 +146,7 @@ WIDGET_JS = r"""
     });
   }
 
+  // Svetlomety: najprv pôvodný promo text, potom otázka s detailným postupom
   function showHeadlightSteps(){
     addMsg("Chceš vedieť ako vyzerá renovácia svetlometov a čo treba robiť potom?",'bot');
     addButtons(["Áno","Nie"],(answer,wrap)=>{
@@ -159,9 +180,9 @@ alebo prémiové riešenie – PPF fóliu, ktorá chráni pred UV žiarením, š
         }
         if(RESPONSES[key]){
           setTimeout(()=>{
-            addMsg(RESPONSES[key],'bot');
-            if(key.includes('ppf')) showPPFPricingFlow();
-            if(key.includes('svetlomet')) showHeadlightSteps();
+            addMsg(RESPONSES[key],'bot');           // najprv pôvodný text danej sekcie
+            if(key.includes('ppf')) showPPFPricingFlow();     // PPF karty
+            if(key.includes('svetlomet')) showHeadlightSteps(); // otázka k svetlám
           },200);
         }
       };
@@ -171,14 +192,10 @@ alebo prémiové riešenie – PPF fóliu, ktorá chráni pred UV žiarením, š
   }
 
   // otváranie/closing
-  const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
-  bubble.onclick=()=>{
-    panel.style.display='flex';
-    audio.currentTime = 0;
-    audio.play().catch(()=>{});
-  };
+  bubble.onclick=()=>{panel.style.display='flex'};
   panel.querySelector('#closechat').onclick=()=>panel.style.display='none';
 
+  // prvé otvorenie = pozdrav + návrhy
   bubble.addEventListener('click',()=>{
     if(!body.dataset.init){
       addMsg('Ahoj 👋 Ako ti môžem pomôcť?','bot');
@@ -187,6 +204,7 @@ alebo prémiové riešenie – PPF fóliu, ktorá chráni pred UV žiarením, š
     }
   });
 
+  // odoslanie textu
   function sendIfNotEmpty(){
     const v=(input.value||"").trim();
     if(!v)return;
@@ -241,8 +259,19 @@ WIDGET_CSS = r"""
 .msg.bot{background:#111214;color:var(--text);}
 .suggestions,.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
 .suggestions button,.actions button{border:1px solid var(--muted);background:var(--bg);color:var(--gold);padding:6px 10px;border-radius:999px;font:12px var(--font);cursor:pointer;}
-.ppf-cards{display:grid;gap:8px;margin:8px 0;}
-.ppf-card{border:1px solid var(--muted);background:var(--bg);border-radius:10px;padding:10px 12px;}
+
+/* PPF karty */
+.ppf-cards{
+  display:grid;
+  gap:8px;
+  margin:8px 0;
+}
+.ppf-card{
+  border:1px solid var(--muted);
+  background:var(--bg);
+  border-radius:10px;
+  padding:10px 12px;
+}
 .ppf-card .t{font-weight:700;color:var(--gold);margin-bottom:4px;}
 .ppf-card .d{font-size:13px;opacity:.9;}
 .ppf-card .p{margin-top:6px;font-weight:700;}
@@ -272,7 +301,18 @@ async def message(payload: dict):
         reply = INTENTS["cenník"]
     elif "svetlo" in text:
         reply = INTENTS["renovácia svetlometov"]
-    elif "interi" in
+    elif "interi" in text:
+        reply = INTENTS["čistenie interiéru"]
+    elif "exteri" in text:
+        reply = INTENTS["čistenie exteriéru"]
+    elif "keram" in text:
+        reply = INTENTS["keramická ochrana"]
+    elif "ppf" in text or "fólia" in text or "folia" in text:
+        reply = INTENTS["ochranná ppf fólia quap"]
+    else:
+        reply = "Rozumiem. Môžem poslať info o službách alebo cenník."
+    return JSONResponse({"reply": reply, "suggestions": SUGGESTIONS})
+
 
 
 
