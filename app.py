@@ -52,11 +52,11 @@ def send_mail(subject: str, body: str, to: str | None = None) -> bool:
 # --- Odpovede podľa tém ---
 INTENTS = {
     "termín": "📅 Rád ti pomôžem s termínom. Pošli mi model auta a dátum, ktorý ti vyhovuje, a ozveme sa.",
-    "renovácia svetlometov": "💡 Renovácia svetlometov len za 30 €. Obnova čírosti, ochrana a profesionálny výsledok.",
-    "čistenie interiéru": "🧽 Čisteniu interiéru venujeme maximálnu pozornosť — detailné čistenie všetkých povrchov, sedačiek aj plastov.",
-    "čistenie exteriéru": "🚗 Je to pekne čisté a lesklé — umývanie karosérie, dekontaminácia laku a aplikácia ochrany.",
+    "renovácia svetlometov": "💡 Renovácia svetlometov len za 30 € ks.Bez Ochrany proti UV žiareniu Obnova čírosti, ochrana a profesionálny výsledok.",
+    "čistenie interiéru": "🧽 Čisteniu interiéru venujeme maximálnu pozornosť — detailné čistenie všetkých povrchov, sedačiek aj plastov. Našu pracu si viete pozret na našom instagrame link na stranke ",
+    "čistenie exteriéru": "🚗 Exterier zahřna detailne umývanie karosérie, dekontaminácia laku-živica,asfalt,náletova Hrzda.",
     "keramická ochrana": "🛡️ Keramická ochrana zabezpečí lesk a odolnosť až na 5 rokov.",
-    "ochranná ppf fólia quap": "💎 PPF fólia je najlepšia ochrana, aká existuje — chráni lak pred kamienkami, škrabancami aj UV žiarením.",
+    "ochranná ppf fólia quap": "💎 PPF fólia je najlepšia ochrana, aká existuje — chráni  vozidla pred poškodením ako sú škrabance, kamienky, nečistoty, UV žiarenie. Hydrofóbnosť ma ako jednu zo svojich top vlastnosti.Samozrejme aj samoregenracia ktora patri asi uplne hore čo sa tika ochrany laku a taktiez zaruka 10 rokov na vyblednutie a popraskanie ",
     "cenník": "<a href='https://gabatep.eu/cennik' target='_blank' rel='noopener'>💰 Otvor stránku Cenník</a>",
 }
 
