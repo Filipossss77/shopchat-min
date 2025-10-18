@@ -58,6 +58,7 @@ try {
   addMsg('Ahoj! Ako sa maš ? S čím ti môžem pomôcť?', 'bot');
   addSuggestions([
   'Termím',
+  'Cenník',
   'Renovácia Svetlometov',
   'Čistenie interiéru',
   'Čistenie exteriéru',
