@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
 import os
@@ -6,85 +6,91 @@ import ssl
 import smtplib
 from email.message import EmailMessage
 
+# --- SMTP nastavenia (cez env premenné) ---
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
+SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))  # 465=SSL, 587=STARTTLS
 SMTP_USER = os.getenv("SMTP_USER", "tepovacieprace.gava@gmail.com")
 SMTP_PASS = os.getenv("SMTP_PASS", "")
 SMTP_FROM = os.getenv("SMTP_FROM", SMTP_USER)
 SMTP_TO   = os.getenv("SMTP_TO", "tepovacieprace.gava@gmail.com")
 
-def send_mail(subject: str, body: str, to: str = None) -> bool:
+def send_mail(subject: str, body: str, to: str | None = None) -> bool:
     """Jednoduché odoslanie mailu cez SMTP. Vráti True/False."""
     try:
-        to = to or SMTP_TO
-        if not (SMTP_HOST and SMTP_USER and SMTP_PASS and to):
+        recipient = to or SMTP_TO
+        if not (SMTP_HOST and SMTP_USER and SMTP_PASS and recipient):
             print("MAIL: chýba SMTP konfigurácia")
             return False
 
         msg = EmailMessage()
         msg["From"] = SMTP_FROM or SMTP_USER
-        msg["To"] = to
+        msg["To"] = recipient
         msg["Subject"] = subject
         msg.set_content(body)
 
+        ctx = ssl.create_default_context()
+
         if SMTP_PORT == 465:
             # SSL pripojenie
-            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=ssl.create_default_context()) as s:
+            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=ctx) as s:
                 s.login(SMTP_USER, SMTP_PASS)
                 s.send_message(msg)
         else:
-            # STARTTLS
+            # STARTTLS (typicky port 587)
             with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as s:
-                s.starttls(context=ssl.create_default_context())
+                s.ehlo()
+                s.starttls(context=ctx)
+                s.ehlo()
                 s.login(SMTP_USER, SMTP_PASS)
                 s.send_message(msg)
 
         return True
+
     except Exception as e:
         print("MAIL_ERROR:", e)
         return False
 
 
-
-# --- Jednoduché odpovede (uprav podľa seba) ---
+# --- Jednoduché odpovede ---
 INTENTS = {
     "termín": "📅 Rád ti pomôžem s termínom. Pošli mi model auta a dátum, ktorý ti vyhovuje, a ozveme sa.",
-    "renovácia svetlometov": "✨ Robíme brúsenie, leštenie aj ochranu svetlometov. Trvá to približne 200 minút.Všetko potrebne najdes sekcia cenník.",
-    "čistenie interiéru": "🧽 Hĺbkové čistenie interiéru — sedačky, plasty, koberce aj všetky detaily.Všetko potrebne najdes sekcia cenník.",
+    "renovácia svetlometov": "✨ Robíme brúsenie, leštenie aj ochranu svetlometov. Trvá to približne 200 minút. Všetko potrebné nájdeš v sekcii Cenník.",
+    "čistenie interiéru": "🧽 Hĺbkové čistenie interiéru — sedačky, plasty, koberce aj všetky detaily. Všetko potrebné nájdeš v sekcii Cenník.",
     "čistenie exteriéru": "🚗 Umývanie karosérie, dekontaminácia laku a aplikácia vosku alebo ochrany.",
     "keramická ochrana": "🛡️ Keramická ochrana chráni lak, disky a okná až na 5 rokov. Lesk a ochrana v jednom.",
-    "ochranná ppf fólia quap": "💎 Ochranná fólia Quap chráni lak pred kamienkami, škrabancami a UV žiarením.Všetko potrebne najdes sekcia cenník.",
-    "cenník": "<a href='https://gabatep.eu/cennik' target='_blank'>💰 Otvor stránku Cenník</a>",
+    "ochranná ppf fólia quap": "💎 Ochranná fólia Quap chráni lak pred kamienkami, škrabancami a UV žiarením. Všetko potrebné nájdeš v sekcii Cenník.",
+    "cenník": "<a href='https://gabatep.eu/cennik' target='_blank' rel='noopener'>💰 Otvor stránku Cenník</a>",
 }
 
 SUGGESTIONS = ["CENNÍK", "SVETLOMETY", "PPF", "TERMÍN"]
 
 # --- Mini widget (CSS/JS) ---
-WIDGET_JS = """
+WIDGET_JS = r"""
 (function () {
+  // Umožniť override: window.SHOPCHAT_API = 'https://tvoja-domena/api/message'
   const API = (window.SHOPCHAT_API || '/api/message');
 
   // --- vytvorenie bubliny/panelu ---
   const bubble = document.createElement('div'); bubble.id='shopchat-bubble'; bubble.innerText='Chat';
   const panel  = document.createElement('div'); panel.id='shopchat-panel';
   const header = document.createElement('div'); header.id='shopchat-header';
-  header.innerHTML = '<span>GaVaTep Chat</span><button id="shopchat-close" style="background:transparent;border:0;color:#d4af37;font-size:16px;cursor:pointer">×</button>';
+  header.innerHTML = '<span>GaVaTep Chat</span><button id="shopchat-close" style="background:transparent;border:0;color:#d4af37;font-size:16px;cursor:pointer" aria-label="Zavrieť">×</button>';
   const body   = document.createElement('div'); body.id='shopchat-body';
   const input  = document.createElement('div'); input.id='shopchat-input';
-  const field  = document.createElement('input'); field.placeholder='Napíš správu…';
-  const send   = document.createElement('button'); send.innerText='Poslať';
+  const field  = document.createElement('input'); field.placeholder='Napíš správu…'; field.setAttribute('aria-label','Správa');
+  const send   = document.createElement('button'); send.innerText='Poslať'; send.setAttribute('aria-label','Poslať správu');
 
   input.append(field, send);
   panel.append(header, body, input);
   document.body.append(bubble, panel);
 
   // auto-open iba pri prvej návšteve
-try {
-  if (!localStorage.getItem('gavatep_chat_opened')) {
-    panel.style.display = 'flex';
-    localStorage.setItem('gavatep_chat_opened', '1');
-  }
-} catch(e){}
+  try {
+    if (!localStorage.getItem('gavatep_chat_opened')) {
+      panel.style.display = 'flex';
+      localStorage.setItem('gavatep_chat_opened', '1');
+    }
+  } catch(e){}
 
   function show(){ panel.style.display='flex'; }
   function hide(){ panel.style.display='none'; }
@@ -94,7 +100,12 @@ try {
   function addMsg(text, who){
     const m = document.createElement('div');
     m.className = 'msg ' + who;
-    m.textContent = text;
+    // ak príde HTML (napr. link na cenník), zobraz ho bezpečne
+    if (who === 'bot' && /<a\s/i.test(text)) {
+      m.innerHTML = text;
+    } else {
+      m.textContent = text;
+    }
     body.appendChild(m);
     body.scrollTop = body.scrollHeight;
   }
@@ -114,7 +125,6 @@ try {
           window.open('https://gavatep.eu/cennik', '_blank', 'noopener');
         });
       } else {
-        // ostatné vypočítajú odpoveď ako doteraz
         b.addEventListener('click', () => {
           field.value = t;
           send.click();
@@ -141,24 +151,35 @@ try {
   async function ask(text){
     addMsg(text, 'user'); field.value='';
     try{
-      const r = await fetch(API,{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text})});
+      const r = await fetch(API, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({text})
+      });
+      if (!r.ok) throw new Error('HTTP '+r.status);
       const j = await r.json();
       addMsg(j.reply || 'Skús to ešte raz 🙂', 'bot');
+
+      // voliteľne zobraz návrhy z API
+      if (Array.isArray(j.suggestions) && j.suggestions.length) {
+        addSuggestions(j.suggestions);
+      }
     }catch(_){
       addMsg('Ups, skúšam znova neskôr.', 'bot');
     }
   }
 
-  send.onclick = () => {
-    if ((field.value.trim()).length) ask(field.value.trim());
-  };
-  field.addEventListener('keydown', (ev) => { if(ev.key==='Enter') send.click(); });
+  function sendIfNotEmpty(){
+    const v = field.value.trim();
+    if (v.length) ask(v);
+  }
+
+  send.onclick = sendIfNotEmpty;
+  field.addEventListener('keydown', (ev) => { if(ev.key==='Enter') sendIfNotEmpty(); });
 })();
 """
 
-
-
-WIDGET_CSS = """
+WIDGET_CSS = r"""
 #shopchat-bubble{
   position:fixed;right:20px;bottom:20px;width:60px;height:60px;border-radius:50%;
   background:#0f0f10;color:#d4af37;font:700 22px/1 system-ui;display:flex;align-items:center;justify-content:center;
@@ -193,7 +214,6 @@ WIDGET_CSS = """
 }
 """
 
-
 app = FastAPI(title="ShopChat Minimal")
 
 # Povolené domény (uprav v prostredí na tvoju Shoptet doménu)
@@ -206,6 +226,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/healthz")
+async def healthz():
+    return JSONResponse({"ok": True})
+
 @app.post("/api/message")
 async def message(payload: dict):
     # Pôvodný text a jeho lowercase varianta
@@ -213,6 +237,7 @@ async def message(payload: dict):
     low = raw.lower()
 
     # --- Špeciál: žiadosť o termín posielame e-mailom ---
+    # Príklad formátu: "Termín: Octavia, 25.11., tel: 0900 000 000"
     if low.startswith("termín:") or low.startswith("termin:"):
         subject = "Žiadosť o termín - web chat"
         body = f"Správa od návštevníka:\n\n{raw}"
@@ -220,14 +245,16 @@ async def message(payload: dict):
 
         if ok:
             return JSONResponse({
-                "reply": "Ďakujem! Poslal som to do e-mailu. Ozveme sa čoskoro. 📬"
+                "reply": "Ďakujem! Poslal som to do e-mailu. Ozveme sa čoskoro. 📬",
+                "suggestions": SUGGESTIONS
             })
         else:
             return JSONResponse({
-                "reply": "Mrzí ma to, e-mail sa nepodarilo odoslať. Skúste prosím ešte raz alebo nás kontaktujte telefonicky."
+                "reply": "Mrzí ma to, e-mail sa nepodarilo odoslať. Skúste prosím ešte raz alebo nás kontaktujte telefonicky.",
+                "suggestions": SUGGESTIONS
             })
 
-    # --- Pôvodná logika – odpovede podľa kľúčových slov ---
+    # --- Odpovede podľa kľúčových slov ---
     if "cenn" in low:
         reply = INTENTS["cenník"]
     elif "svetlo" in low:
@@ -236,12 +263,16 @@ async def message(payload: dict):
         reply = INTENTS["ochranná ppf fólia quap"]
     elif "term" in low or "rezerv" in low:
         reply = INTENTS["termín"]
+    elif "interi" in low:
+        reply = INTENTS["čistenie interiéru"]
+    elif "exteri" in low or "umýv" in low or "umyv" in low:
+        reply = INTENTS["čistenie exteriéru"]
+    elif "keram" in low:
+        reply = INTENTS["keramická ochrana"]
     else:
         reply = "Rozumiem. Môžem poslať cenník, voľné termíny alebo info o PPF."
 
     return JSONResponse({"reply": reply, "suggestions": SUGGESTIONS})
-
-
 
 @app.get("/widget.css")
 async def widget_css():
