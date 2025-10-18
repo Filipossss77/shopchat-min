@@ -22,8 +22,8 @@ def send_mail(subject: str, body: str, to: str | None = None) -> bool:
         msg.set_content(body)
         ctx = ssl.create_default_context()
         with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=ctx) as s:
-          s.login(SMTP_USER, SMTP_PASS)
-          s.send_message(msg)
+            s.login(SMTP_USER, SMTP_PASS)
+            s.send_message(msg)
         return True
     except Exception as e:
         print("MAIL_ERROR:", e)
@@ -53,9 +53,10 @@ WIDGET_JS = r"""
     "ochranná ppf fólia quap": `""" + INTENTS["ochranná ppf fólia quap"] + """`
   };
 
-  const bubble=document.createElement('div');
-  bubble.id='shopchat-bubble';
-  bubble.textContent='Chat';
+  // 💬 Bublina – vrátená späť
+  const bubble = document.createElement('div');
+  bubble.id = 'shopchat-bubble';
+  bubble.innerHTML = '💬';
   document.body.appendChild(bubble);
 
   const panel=document.createElement('div');
@@ -94,55 +95,6 @@ WIDGET_JS = r"""
     body.scrollTop=body.scrollHeight;
   }
 
-  // PPF follow-up (karty + kontakt) – beží ako predtým
-  function showPPFQuestion(){
-    addMsg("Chceš spraviť cenník na svoje auto?",'bot');
-    addButtons(["Áno","Nie"],(answer,wrap)=>{
-      addMsg(answer,'user');
-      wrap.remove();
-      if(answer==="Áno"){
-        const cards = `
-<div class="ppf-cards">
-  <div class="ppf-card">
-    <div class="t">ŠTANDARD</div>
-    <div class="d">(kapota, predný nárazník, predné svetlá, spätné zrkadlá)</div>
-    <div class="p">od 800€</div>
-  </div>
-  <div class="ppf-card">
-    <div class="t">PREMIUM</div>
-    <div class="d">(kapota, predný nárazník, predné blatníky, predné svetlá, spätné zrkadlá, predná strecha, A stĺpiky)</div>
-    <div class="p">od 1200€</div>
-  </div>
-  <div class="ppf-card">
-    <div class="t">KOMPLET</div>
-    <div class="d">(celé auto)</div>
-    <div class="p">od 2400€</div>
-  </div>
-  <div class="ppf-card">
-    <div class="t">INDIVIDUÁL</div>
-    <div class="d">(balík na mieru vyskladaný podľa vás)</div>
-    <div class="p">cena dohodou</div>
-  </div>
-</div>`;
-        addMsg(cards, 'bot');
-
-        addMsg("Chceš nás kontaktovať?", 'bot');
-        addButtons(["Áno","Nie"], (ans2, wrap2)=>{
-          addMsg(ans2, 'user');
-          wrap2.remove();
-          if(ans2==="Áno"){
-            window.location.href = "https://www.gavatep.eu/kontakt/";
-          } else {
-            addMsg("Jasné. Keď budeš chcieť, klikni na Cenník alebo napíš model auta a pripravíme presnú cenu. 🙂", 'bot');
-          }
-        }, 'actions contact');
-      } else {
-        addMsg("OK — ak chceš neskôr, ozvi sa, alebo napíš model auta a vyrobíme presnú kalkuláciu. 🙂",'bot');
-      }
-    });
-  }
-
-  // NOVÉ: pri svetlometoch — najprv pôvodný text, POTOM otázka
   function showHeadlightSteps(){
     addMsg("Chceš vedieť ako vyzerá renovácia svetlometov a čo treba robiť potom?",'bot');
     addButtons(["Áno","Nie"],(answer,wrap)=>{
@@ -176,9 +128,8 @@ alebo prémiové riešenie – PPF fóliu, ktorá chráni pred UV žiarením, š
         }
         if(RESPONSES[key]){
           setTimeout(()=>{
-            addMsg(RESPONSES[key],'bot');     // ← najprv pôvodný text
-            if(key.includes('ppf')) showPPFQuestion();
-            if(key.includes('svetlomet')) showHeadlightSteps();  // ← potom otázka
+            addMsg(RESPONSES[key],'bot');
+            if(key.includes('svetlomet')) showHeadlightSteps();
           },200);
         }
       };
@@ -205,8 +156,8 @@ alebo prémiové riešenie – PPF fóliu, ktorá chráni pred UV žiarením, š
     const low=v.toLowerCase();
     if(RESPONSES[low]){
       setTimeout(()=>{
-        addMsg(RESPONSES[low],'bot');        # najprv text
-        if(/svetlomet/.test(low)) showHeadlightSteps();  # potom otázka
+        addMsg(RESPONSES[low],'bot');
+        if(/svetlomet/.test(low)) showHeadlightSteps();
       },150);
       return;
     }
@@ -227,19 +178,43 @@ WIDGET_CSS = r"""
   --font: Inter, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
 }
 #shopchat-bubble{
-  position:fixed;right:20px;bottom:20px;width:64px;height:64px;border-radius:50%;
-  background:var(--bg2);color:var(--gold);
-  display:flex;align-items:center;justify-content:center;
-  font:700 16px var(--font);cursor:pointer;z-index:999999;
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  width:64px;
+  height:64px;
+  border-radius:50%;
+  background:var(--bg2);
+  color:var(--gold);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font:700 26px var(--font);
+  cursor:pointer;
+  z-index:999999;
   border:2px solid var(--gold);
   box-shadow:0 8px 30px rgba(0,0,0,.45),0 0 0 3px rgba(212,175,55,.15);
   transition:transform .2s ease, box-shadow .2s ease;
 }
-#shopchat-bubble:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(0,0,0,.55),0 0 0 5px rgba(212,175,55,.22);}
+#shopchat-bubble:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 36px rgba(0,0,0,.55),0 0 0 5px rgba(212,175,55,.22);
+}
 #shopchat-panel{
-  position:fixed;right:20px;bottom:96px;width:380px;max-width:95vw;height:520px;
-  background:var(--bg);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 0 1px var(--muted) inset;
-  display:none;flex-direction:column;overflow:hidden;z-index:999998;font-family:var(--font);
+  position:fixed;
+  right:20px;
+  bottom:96px;
+  width:380px;
+  max-width:95vw;
+  height:520px;
+  background:var(--bg);
+  border-radius:16px;
+  box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 0 1px var(--muted) inset;
+  display:none;
+  flex-direction:column;
+  overflow:hidden;
+  z-index:999998;
+  font-family:var(--font);
 }
 #shopchat-header{padding:12px 14px;background:var(--bg2);color:var(--gold);display:flex;justify-content:space-between;align-items:center;font-weight:700;border-bottom:1px solid var(--muted);}
 #shopchat-header button{background:none;border:none;color:var(--gold);font-size:18px;cursor:pointer;}
@@ -289,6 +264,7 @@ async def message(payload: dict):
     else:
         reply = "Rozumiem. Môžem poslať info o službách alebo cenník."
     return JSONResponse({"reply": reply, "suggestions": SUGGESTIONS})
+
 
 
 
