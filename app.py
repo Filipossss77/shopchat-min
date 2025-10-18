@@ -64,21 +64,23 @@ WIDGET_JS = r"""
   const panel=document.createElement('div');
   panel.id='shopchat-panel';
   panel.innerHTML=`
-    <div id='shopchat-header'><span>GaVaTep</span><button id='closechat' aria-label='Zavrieť'>×</button></div>
+    <div id='shopchat-header'><span>Chat</span><button id='closechat' aria-label='Zavrieť'>×</button></div>
     <div id='shopchat-body'></div>
     <div id='shopchat-input'><input placeholder='Napíš správu...'><button aria-label='Poslať'>Poslať</button></div>
   `;
- // zvuk pri otvorení + automatické otvorenie
-const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
-function openChat(){
-  panel.style.display = 'flex';
-  audio.currentTime = 0;
-  audio.play().catch(()=>{});
-}
-window.addEventListener('load', ()=>{
-  openChat();
-});
+  document.body.appendChild(panel);
+  panel.style.display='none';
 
+  // zvuk pri otvorení + automatické otvorenie
+  const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
+  function openChat(){
+    panel.style.display = 'flex';
+    try {
+      audio.currentTime = 0;
+      audio.play();
+    } catch(_) {}
+  }
+  window.addEventListener('load', ()=>{ openChat(); });
 
   const body=panel.querySelector('#shopchat-body');
   const input=panel.querySelector('input');
@@ -87,7 +89,6 @@ window.addEventListener('load', ()=>{
   function addMsg(txt,who){
     const d=document.createElement('div');
     d.className='msg '+who;
-    // povolíme iba odkazy a naše PPF karty
     if(who==='bot' && /<a\s|class="ppf-cards"/i.test(txt)) d.innerHTML=txt;
     else d.textContent=txt;
     body.appendChild(d);
@@ -107,75 +108,6 @@ window.addEventListener('load', ()=>{
     body.scrollTop=body.scrollHeight;
   }
 
-  // PPF: cenník ako karty + následná otázka na kontakt
-  function showPPFPricingFlow(){
-    addMsg("Chceš spraviť cenník na svoje auto?",'bot');
-    addButtons(["Áno","Nie"],(answer,wrap)=>{
-      addMsg(answer,'user');
-      wrap.remove();
-      if(answer==="Áno"){
-        const cards = `
-<div class="ppf-cards">
-  <div class="ppf-card">
-    <div class="t">ŠTANDARD</div>
-    <div class="d">(kapota, predný nárazník, predné svetlá, spätné zrkadlá)</div>
-    <div class="p">od 800€</div>
-  </div>
-  <div class="ppf-card">
-    <div class="t">PREMIUM</div>
-    <div class="d">(kapota, predný nárazník, predné blatníky, predné svetlá, spätné zrkadlá, predná strecha, A stĺpiky)</div>
-    <div class="p">od 1200€</div>
-  </div>
-  <div class="ppf-card">
-    <div class="t">KOMPLET</div>
-    <div class="d">(celé auto)</div>
-    <div class="p">od 2400€</div>
-  </div>
-  <div class="ppf-card">
-    <div class="t">INDIVIDUÁL</div>
-    <div class="d">(balík na mieru vyskladaný podľa vás)</div>
-    <div class="p">cena dohodou</div>
-  </div>
-</div>`;
-        addMsg(cards,'bot');
-
-        addMsg("Chceš nás kontaktovať?", 'bot');
-        addButtons(["Áno","Nie"], (ans2, wrap2)=>{
-          addMsg(ans2,'user');
-          wrap2.remove();
-          if(ans2==="Áno"){
-            window.location.href="https://www.gavatep.eu/kontakt/";
-          } else {
-            addMsg("Jasné. Keď budeš chcieť, klikni na Cenník alebo napíš model auta a pripravíme presnú cenu. 🙂", 'bot');
-          }
-        }, 'actions contact');
-      } else {
-        addMsg("OK — keď budeš chcieť neskôr, ozvi sa. 🙂",'bot');
-      }
-    });
-  }
-
-  // Svetlomety: najprv pôvodný promo text, potom otázka s detailným postupom
-  function showHeadlightSteps(){
-    addMsg("Chceš vedieť ako vyzerá renovácia svetlometov a čo treba robiť potom?",'bot');
-    addButtons(["Áno","Nie"],(answer,wrap)=>{
-      addMsg(answer,'user');
-      wrap.remove();
-      if(answer==="Áno"){
-        const detail = `✨ Renovácia svetlometov ✨
-Počas renovácie odstránime zoxidovaný povrch svetlometov pomocou precízneho brúsenia – začíname nasucho, potom pokračujeme mokrým brúsením od zrnitosti 800 až po 3000. 🔧
-Následne svetlá dôkladne odmastíme a aplikujeme K2 Vapron – špeciálnu tekutinu, ktorá sa po nahriatí odparí a chemicky zjednotí povrch plastu. Výsledok? 🌟 Čisté, priehľadné a ako nové svetlomety.
-Ale tu to nekončí – takto zrenovované svetlá treba ochrániť.
-🔹 Odporúčame keramickú ochranu K2 Gravon s trvácnosťou až 5 rokov,
-alebo prémiové riešenie – PPF fóliu, ktorá chráni pred UV žiarením, škrabancami a má aj samoregeneračné vlastnosti. 💪
-💡 Vaše svetlá budú nielen svietiť lepšie, ale aj vyzerať skvelo.`;
-        addMsg(detail,'bot');
-      } else {
-        addMsg("V poriadku 🙂",'bot');
-      }
-    });
-  }
-
   function addSuggestions(){
     const b=document.createElement('div');b.className='suggestions';
     ["Cenník","Renovácia svetlometov","Čistenie interiéru","Čistenie exteriéru","Keramická ochrana","Ochranná PPF fólia Quap"].forEach(t=>{
@@ -188,11 +120,7 @@ alebo prémiové riešenie – PPF fóliu, ktorá chráni pred UV žiarením, š
           return;
         }
         if(RESPONSES[key]){
-          setTimeout(()=>{
-            addMsg(RESPONSES[key],'bot');           // najprv pôvodný text danej sekcie
-            if(key.includes('ppf')) showPPFPricingFlow();     // PPF karty
-            if(key.includes('svetlomet')) showHeadlightSteps(); // otázka k svetlám
-          },200);
+          setTimeout(()=>{ addMsg(RESPONSES[key],'bot'); },200);
         }
       };
       b.appendChild(btn);
@@ -200,52 +128,18 @@ alebo prémiové riešenie – PPF fóliu, ktorá chráni pred UV žiarením, š
     body.appendChild(b);
   }
 
-// otváranie/closing + auto-open
-const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
-
-function openChat(){
-  panel.style.display = 'flex';
-  try {
-    audio.currentTime = 0;
-    audio.play();
-  } catch(_) {}
-
-  // aby sa pri auto-otvorení zobrazil aj úvod a návrhy (rovnako ako pri kliku)
-  if(!body.dataset.init){
-    addMsg('Ahoj 👋 Ako ti môžem pomôcť?','bot');
-    addSuggestions();
-    body.dataset.init = '1';
-  }
-}
-
-// klik na bublinu = otvorenie
-bubble.addEventListener('click', openChat);
-
-// krížik = zavrieť
-panel.querySelector('#closechat').addEventListener('click', ()=>{ panel.style.display='none'; });
-
-// automatické otvorenie po načítaní DOM (krátke oneskorenie kvôli istote)
-document.addEventListener('DOMContentLoaded', ()=>{ setTimeout(openChat, 200); });
-
-
-
-  // odoslanie textu
-  function sendIfNotEmpty(){
-    const v=(input.value||"").trim();
-    if(!v)return;
-    addMsg(v,'user');input.value='';
-    const low=v.toLowerCase();
-    if(RESPONSES[low]){
-      setTimeout(()=>{
-        addMsg(RESPONSES[low],'bot');
-        if(/ppf/.test(low)) showPPFPricingFlow();
-        if(/svetlomet/.test(low)) showHeadlightSteps();
-      },150);
-      return;
+  bubble.addEventListener('click',()=>{
+    panel.style.display='flex';
+    try {
+      audio.currentTime = 0;
+      audio.play();
+    } catch(_) {}
+    if(!body.dataset.init){
+      addMsg('Ahoj 👋 Ako ti môžem pomôcť?','bot');
+      addSuggestions();
+      body.dataset.init='1';
     }
-  }
-  send.onclick=sendIfNotEmpty;
-  input.addEventListener('keydown',e=>{if(e.key==='Enter')sendIfNotEmpty();});
+  });
 })();
 """
 
@@ -262,10 +156,17 @@ WIDGET_CSS = r"""
   position:fixed;right:20px;bottom:20px;width:64px;height:64px;border-radius:50%;
   background:var(--bg2);color:var(--gold);
   display:flex;align-items:center;justify-content:center;
-  font:700 26px var(--font);cursor:pointer;z-index:999999;
+  font:700 20px var(--font);cursor:pointer;z-index:999999;
   border:2px solid var(--gold);
-  box-shadow:0 8px 30px rgba(0,0,0,.45),0 0 0 3px rgba(212,175,55,.15);
+  box-shadow:0 0 15px rgba(212,175,55,0.4),0 8px 30px rgba(0,0,0,.45);
+  background-image:linear-gradient(120deg,rgba(212,175,55,0.3) 0%,transparent 40%,rgba(212,175,55,0.3) 80%);
+  background-size:200% 200%;
+  animation:shine 4s linear infinite;
   transition:transform .2s ease, box-shadow .2s ease;
+}
+@keyframes shine {
+  0% {background-position:200% 0;}
+  100% {background-position:-200% 0;}
 }
 #shopchat-bubble:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(0,0,0,.55),0 0 0 5px rgba(212,175,55,.22);}
 #shopchat-panel{
@@ -273,34 +174,24 @@ WIDGET_CSS = r"""
   background:var(--bg);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 0 1px var(--muted) inset;
   display:none;flex-direction:column;overflow:hidden;z-index:999998;font-family:var(--font);
 }
-#shopchat-header{padding:12px 14px;background:var(--bg2);color:var(--gold);display:flex;justify-content:space-between;align-items:center;font-weight:700;border-bottom:1px solid var(--muted);}
-#shopchat-header{padding:12px 14px;background:linear-gradient(90deg,#0f0f10 0%,#1a1a1b 40%,#0f0f10 80%);color:var(--gold);display:flex;justify-content:space-between;align-items:center;font-weight:700;border-bottom:1px solid var(--muted);border-top:1px solid var(--gold);background-size:200% 200%;animation:shimmer 4s linear infinite;}
+#shopchat-header{
+  padding:12px 14px;
+  background:linear-gradient(90deg,#0f0f10 0%,#1a1a1b 40%,#0f0f10 80%);
+  color:var(--gold);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-weight:700;
+  border-bottom:1px solid var(--muted);
+  border-top:1px solid var(--gold);
+  background-size:200% 200%;
+  animation:shimmer 4s linear infinite;
+}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 #shopchat-body{flex:1;padding:12px;overflow:auto;background:var(--bg);color:var(--text);}
 #shopchat-input{display:flex;gap:8px;padding:10px;background:var(--bg2);border-top:1px solid var(--muted);}
 #shopchat-input input{flex:1;padding:10px 12px;border:1px solid var(--muted);border-radius:10px;background:var(--bg);color:var(--text);}
 #shopchat-input button{padding:10px 12px;border-radius:10px;border:none;background:var(--gold);color:#111;font-weight:700;}
-.msg{max-width:80%;margin:6px 0;padding:10px 12px;border-radius:12px;font:14px/1.35 var(--font);white-space:pre-line;}
-.msg.user{background:#19324a;color:#e9f2ff;margin-left:auto;}
-.msg.bot{background:#111214;color:var(--text);}
-.suggestions,.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
-.suggestions button,.actions button{border:1px solid var(--muted);background:var(--bg);color:var(--gold);padding:6px 10px;border-radius:999px;font:12px var(--font);cursor:pointer;}
-
-/* PPF karty */
-.ppf-cards{
-  display:grid;
-  gap:8px;
-  margin:8px 0;
-}
-.ppf-card{
-  border:1px solid var(--muted);
-  background:var(--bg);
-  border-radius:10px;
-  padding:10px 12px;
-}
-.ppf-card .t{font-weight:700;color:var(--gold);margin-bottom:4px;}
-.ppf-card .d{font-size:13px;opacity:.9;}
-.ppf-card .p{margin-top:6px;font-weight:700;}
 """
 
 app = FastAPI(title="GaVaTep Chat")
@@ -338,6 +229,7 @@ async def message(payload: dict):
     else:
         reply = "Rozumiem. Môžem poslať info o službách alebo cenník."
     return JSONResponse({"reply": reply, "suggestions": SUGGESTIONS})
+
 
 
 
