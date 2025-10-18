@@ -22,8 +22,8 @@ def send_mail(subject: str, body: str, to: str | None = None) -> bool:
         msg.set_content(body)
         ctx = ssl.create_default_context()
         with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=ctx) as s:
-            s.login(SMTP_USER, SMTP_PASS)
-            s.send_message(msg)
+          s.login(SMTP_USER, SMTP_PASS)
+          s.send_message(msg)
         return True
     except Exception as e:
         print("MAIL_ERROR:", e)
@@ -75,12 +75,10 @@ WIDGET_JS = r"""
   function addMsg(txt,who){
     const d=document.createElement('div');
     d.className='msg '+who;
-    // POVOLÍME HTML len pre odkazy a naše PPF karty
-    if (who==='bot' && /<a\s|class="ppf-cards"/i.test(txt)) d.innerHTML = txt;
-    else d.textContent = txt;
+    if(who==='bot' && /<a\s|class="ppf-cards"/i.test(txt)) d.innerHTML=txt;
+    else d.textContent=txt;
     body.appendChild(d);
     body.scrollTop=body.scrollHeight;
-    return d;
   }
 
   function addButtons(labels,onClick,cls='actions'){
@@ -96,7 +94,7 @@ WIDGET_JS = r"""
     body.scrollTop=body.scrollHeight;
   }
 
-  // PPF follow-up (cenník + kontakt) – teraz formou kariet
+  // PPF follow-up (karty + kontakt) – beží ako predtým
   function showPPFQuestion(){
     addMsg("Chceš spraviť cenník na svoje auto?",'bot');
     addButtons(["Áno","Nie"],(answer,wrap)=>{
@@ -128,7 +126,6 @@ WIDGET_JS = r"""
 </div>`;
         addMsg(cards, 'bot');
 
-        // otázka na kontakt
         addMsg("Chceš nás kontaktovať?", 'bot');
         addButtons(["Áno","Nie"], (ans2, wrap2)=>{
           addMsg(ans2, 'user');
@@ -141,6 +138,27 @@ WIDGET_JS = r"""
         }, 'actions contact');
       } else {
         addMsg("OK — ak chceš neskôr, ozvi sa, alebo napíš model auta a vyrobíme presnú kalkuláciu. 🙂",'bot');
+      }
+    });
+  }
+
+  // NOVÉ: pri svetlometoch — najprv pôvodný text, POTOM otázka
+  function showHeadlightSteps(){
+    addMsg("Chceš vedieť ako vyzerá renovácia svetlometov a čo treba robiť potom?",'bot');
+    addButtons(["Áno","Nie"],(answer,wrap)=>{
+      addMsg(answer,'user');
+      wrap.remove();
+      if(answer==="Áno"){
+        const detail = `✨ Renovácia svetlometov ✨
+Počas renovácie odstránime zoxidovaný povrch svetlometov pomocou precízneho brúsenia – začíname nasucho, potom pokračujeme mokrým brúsením od zrnitosti 800 až po 3000. 🔧
+Následne svetlá dôkladne odmastíme a aplikujeme K2 Vapron – špeciálnu tekutinu, ktorá sa po nahriatí odparí a chemicky zjednotí povrch plastu. Výsledok? 🌟 Čisté, priehľadné a ako nové svetlomety.
+Ale tu to nekončí – takto zrenovované svetlá treba ochrániť.
+🔹 Odporúčame keramickú ochranu K2 Gravon s trvácnosťou až 5 rokov,
+alebo prémiové riešenie – PPF fóliu, ktorá chráni pred UV žiarením, škrabancami a má aj samoregeneračné vlastnosti. 💪
+💡 Vaše svetlá budú nielen svietiť lepšie, ale aj vyzerať skvelo.`;
+        addMsg(detail,'bot');
+      } else {
+        addMsg("V poriadku 🙂",'bot');
       }
     });
   }
@@ -158,8 +176,9 @@ WIDGET_JS = r"""
         }
         if(RESPONSES[key]){
           setTimeout(()=>{
-            addMsg(RESPONSES[key],'bot');
+            addMsg(RESPONSES[key],'bot');     // ← najprv pôvodný text
             if(key.includes('ppf')) showPPFQuestion();
+            if(key.includes('svetlomet')) showHeadlightSteps();  // ← potom otázka
           },200);
         }
       };
@@ -167,16 +186,6 @@ WIDGET_JS = r"""
     });
     body.appendChild(b);
   }
-
-  // otvorí sa automaticky raz po 1s
-  window.addEventListener('load',()=>{
-    setTimeout(()=>{
-      if(!localStorage.getItem('chatOpenedOnce')){
-        bubble.click();
-        localStorage.setItem('chatOpenedOnce','1');
-      }
-    },1000);
-  });
 
   bubble.onclick=()=>{panel.style.display='flex'};
   panel.querySelector('#closechat').onclick=()=>panel.style.display='none';
@@ -196,8 +205,8 @@ WIDGET_JS = r"""
     const low=v.toLowerCase();
     if(RESPONSES[low]){
       setTimeout(()=>{
-        addMsg(RESPONSES[low],'bot');
-        if(/ppf/.test(low)) showPPFQuestion();
+        addMsg(RESPONSES[low],'bot');        # najprv text
+        if(/svetlomet/.test(low)) showHeadlightSteps();  # potom otázka
       },150);
       return;
     }
@@ -238,37 +247,11 @@ WIDGET_CSS = r"""
 #shopchat-input{display:flex;gap:8px;padding:10px;background:var(--bg2);border-top:1px solid var(--muted);}
 #shopchat-input input{flex:1;padding:10px 12px;border:1px solid var(--muted);border-radius:10px;background:var(--bg);color:var(--text);}
 #shopchat-input button{padding:10px 12px;border-radius:10px;border:none;background:var(--gold);color:#111;font-weight:700;}
-.msg{max-width:80%;margin:6px 0;padding:10px 12px;border-radius:12px;font:14px/1.35 var(--font);}
+.msg{max-width:80%;margin:6px 0;padding:10px 12px;border-radius:12px;font:14px/1.35 var(--font);white-space:pre-line;}
 .msg.user{background:#19324a;color:#e9f2ff;margin-left:auto;}
 .msg.bot{background:#111214;color:var(--text);}
 .suggestions,.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
 .suggestions button,.actions button{border:1px solid var(--muted);background:var(--bg);color:var(--gold);padding:6px 10px;border-radius:999px;font:12px var(--font);cursor:pointer;}
-
-/* PPF cards */
-.ppf-cards{
-  display:grid;
-  gap:8px;
-  margin:8px 0;
-}
-.ppf-card{
-  border:1px solid var(--muted);
-  background:var(--bg);
-  border-radius:10px;
-  padding:10px 12px;
-}
-.ppf-card .t{
-  font-weight:700;
-  color:var(--gold);
-  margin-bottom:4px;
-}
-.ppf-card .d{
-  font-size:13px;
-  opacity:.9;
-}
-.ppf-card .p{
-  margin-top:6px;
-  font-weight:700;
-}
 """
 
 app = FastAPI(title="GaVaTep Chat")
@@ -306,5 +289,6 @@ async def message(payload: dict):
     else:
         reply = "Rozumiem. Môžem poslať info o službách alebo cenník."
     return JSONResponse({"reply": reply, "suggestions": SUGGESTIONS})
+
 
 
