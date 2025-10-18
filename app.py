@@ -1,12 +1,9 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
-import os
-import ssl
-import smtplib
+import os, ssl, smtplib
 from email.message import EmailMessage
 
-# --- SMTP nastavenia ---
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
 SMTP_USER = os.getenv("SMTP_USER", "tepovacieprace.gava@gmail.com")
@@ -17,33 +14,21 @@ SMTP_TO = os.getenv("SMTP_TO", "tepovacieprace.gava@gmail.com")
 def send_mail(subject: str, body: str, to: str | None = None) -> bool:
     try:
         recipient = to or SMTP_TO
-        if not (SMTP_HOST and SMTP_USER and SMTP_PASS and recipient):
-            print("MAIL: chýba SMTP konfigurácia")
-            return False
         msg = EmailMessage()
-        msg["From"] = SMTP_FROM or SMTP_USER
+        msg["From"] = SMTP_FROM
         msg["To"] = recipient
         msg["Subject"] = subject
         msg.set_content(body)
         ctx = ssl.create_default_context()
-        if SMTP_PORT == 465:
-            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=ctx) as s:
-                s.login(SMTP_USER, SMTP_PASS)
-                s.send_message(msg)
-        else:
-            with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as s:
-                s.ehlo()
-                s.starttls(context=ctx)
-                s.ehlo()
-                s.login(SMTP_USER, SMTP_PASS)
-                s.send_message(msg)
+        with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=ctx) as s:
+            s.login(SMTP_USER, SMTP_PASS)
+            s.send_message(msg)
         return True
     except Exception as e:
         print("MAIL_ERROR:", e)
         return False
 
 
-# --- TEXTY ---
 INTENTS = {
     "termín": "📅 Rád ti pomôžem s termínom. Pošli mi model auta a dátum, ktorý ti vyhovuje, a ozveme sa.",
     "renovácia svetlometov": "✨ Renovácia svetlometov K2 Vapron ✨ Tvoje svetlá nemusia žiariť len v noci, ale aj na pohľad 😎 Pomocou K2 Vapron im vrátime pôvodný lesk a priehľadnosť 🔧💡 Odstránime zažltnutie, matný povrch a ochránime ich pred UV žiarením ☀️ 🚘 Výsledok? Čisté, jasné a ako nové svetlá – pripravené ukázať cestu 🌙",
@@ -56,7 +41,6 @@ INTENTS = {
 
 SUGGESTIONS = ["CENNÍK", "SVETLOMETY", "INTERIÉR", "EXTERIÉR", "KERAMICKÁ", "PPF"]
 
-# --- WIDGET SCRIPT ---
 WIDGET_JS = r"""
 (function(){
   const RESPONSES = {
@@ -105,7 +89,7 @@ WIDGET_JS = r"""
         addMsg(t,'user');
         const key=t.toLowerCase();
         if(RESPONSES[key]) setTimeout(()=>addMsg(RESPONSES[key],'bot'),200);
-        else if(key.includes('cenn')) window.open('https://gabatep.eu/cennik','_blank');
+        else if(key.includes('cenn')) window.open('https://gavatep.eu/cennik','_blank');
       };
       b.appendChild(btn);
     });
@@ -122,7 +106,6 @@ WIDGET_JS = r"""
 })();
 """
 
-# --- WIDGET CSS ---
 WIDGET_CSS = r"""
 #shopchat-bubble{
   position:fixed;right:20px;bottom:20px;width:60px;height:60px;
