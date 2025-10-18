@@ -31,12 +31,10 @@ def send_mail(subject: str, body: str, to: str | None = None) -> bool:
         ctx = ssl.create_default_context()
 
         if SMTP_PORT == 465:
-            # SSL pripojenie
             with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=ctx) as s:
                 s.login(SMTP_USER, SMTP_PASS)
                 s.send_message(msg)
         else:
-            # STARTTLS (typicky port 587)
             with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as s:
                 s.ehlo()
                 s.starttls(context=ctx)
@@ -51,26 +49,24 @@ def send_mail(subject: str, body: str, to: str | None = None) -> bool:
         return False
 
 
-# --- Jednoduché odpovede ---
+# --- Odpovede podľa tém ---
 INTENTS = {
     "termín": "📅 Rád ti pomôžem s termínom. Pošli mi model auta a dátum, ktorý ti vyhovuje, a ozveme sa.",
-    "renovácia svetlometov": "✨ Robíme brúsenie, leštenie aj ochranu svetlometov. Trvá to približne 200 minút. Všetko potrebné nájdeš v sekcii Cenník.",
-    "čistenie interiéru": "🧽 Hĺbkové čistenie interiéru — sedačky, plasty, koberce aj všetky detaily. Všetko potrebné nájdeš v sekcii Cenník.",
-    "čistenie exteriéru": "🚗 Umývanie karosérie, dekontaminácia laku a aplikácia vosku alebo ochrany.",
-    "keramická ochrana": "🛡️ Keramická ochrana chráni lak, disky a okná až na 5 rokov. Lesk a ochrana v jednom.",
-    "ochranná ppf fólia quap": "💎 Ochranná fólia Quap chráni lak pred kamienkami, škrabancami a UV žiarením. Všetko potrebné nájdeš v sekcii Cenník.",
+    "renovácia svetlometov": "💡 Renovácia svetlometov len za 30 €. Obnova čírosti, ochrana a profesionálny výsledok.",
+    "čistenie interiéru": "🧽 Čisteniu interiéru venujeme maximálnu pozornosť — detailné čistenie všetkých povrchov, sedačiek aj plastov.",
+    "čistenie exteriéru": "🚗 Je to pekne čisté a lesklé — umývanie karosérie, dekontaminácia laku a aplikácia ochrany.",
+    "keramická ochrana": "🛡️ Keramická ochrana zabezpečí lesk a odolnosť až na 5 rokov.",
+    "ochranná ppf fólia quap": "💎 PPF fólia je najlepšia ochrana, aká existuje — chráni lak pred kamienkami, škrabancami aj UV žiarením.",
     "cenník": "<a href='https://gabatep.eu/cennik' target='_blank' rel='noopener'>💰 Otvor stránku Cenník</a>",
 }
 
-SUGGESTIONS = ["CENNÍK", "SVETLOMETY", "PPF", "TERMÍN"]
+SUGGESTIONS = ["CENNÍK", "SVETLOMETY", "PPF"]
 
 # --- Mini widget (CSS/JS) ---
 WIDGET_JS = r"""
 (function () {
-  // Umožniť override: window.SHOPCHAT_API = 'https://tvoja-domena/api/message'
   const API = (window.SHOPCHAT_API || 'https://shopchat-min-2.onrender.com/api/message');
 
-  // --- vytvorenie bubliny/panelu ---
   const bubble = document.createElement('div'); bubble.id='shopchat-bubble'; bubble.innerText='Chat';
   const panel  = document.createElement('div'); panel.id='shopchat-panel';
   const header = document.createElement('div'); header.id='shopchat-header';
@@ -84,7 +80,6 @@ WIDGET_JS = r"""
   panel.append(header, body, input);
   document.body.append(bubble, panel);
 
-  // auto-open iba pri prvej návšteve
   try {
     if (!localStorage.getItem('gavatep_chat_opened')) {
       panel.style.display = 'flex';
@@ -100,7 +95,6 @@ WIDGET_JS = r"""
   function addMsg(text, who){
     const m = document.createElement('div');
     m.className = 'msg ' + who;
-    // ak príde HTML (napr. link na cenník), zobraz ho bezpečne
     if (who === 'bot' && /<a\s/i.test(text)) {
       m.innerHTML = text;
     } else {
@@ -118,30 +112,25 @@ WIDGET_JS = r"""
       const b = document.createElement('button');
       b.textContent = t;
 
-      // špeciálne: Cenník otvorí stránku
       if (t.toLowerCase() === 'cenník' || t.toLowerCase() === 'cennik') {
         b.addEventListener('click', (e) => {
           e.preventDefault();
           window.open('https://gavatep.eu/cennik', '_blank', 'noopener');
         });
-     } else {
-  b.addEventListener('click', () => {
-    const tl = t.toLowerCase();
-    // Pri "Termín" užívateľ ešte doplní údaje; nespúšťame hneď odoslanie
-    if (tl.startsWith('termín') || tl.startsWith('termin')) {
-      field.value = 'Termín: ';
-      field.focus();
-    } else {
-      field.value = t;
-      send.click();
-    }
-  });
-}
+      } else {
+        b.addEventListener('click', () => {
+          field.value = t;
+          send.click();
+        });
+      }
+      wrap.appendChild(b);
+    });
 
-  // greeting + návrhy
+    body.appendChild(wrap);
+  }
+
   addMsg('Ahoj! Ako sa máš? S čím ti môžem pomôcť?', 'bot');
   addSuggestions([
-    'Termín',
     'Cenník',
     'Renovácia Svetlometov',
     'Čistenie interiéru',
@@ -161,8 +150,6 @@ WIDGET_JS = r"""
       if (!r.ok) throw new Error('HTTP '+r.status);
       const j = await r.json();
       addMsg(j.reply || 'Skús to ešte raz 🙂', 'bot');
-
-      // voliteľne zobraz návrhy z API
       if (Array.isArray(j.suggestions) && j.suggestions.length) {
         addSuggestions(j.suggestions);
       }
@@ -189,7 +176,6 @@ WIDGET_CSS = r"""
   z-index:9999
 }
 #shopchat-bubble:hover{transform:translateY(-2px);background:#151517}
-
 #shopchat-panel{
   position:fixed;right:20px;bottom:90px;width:360px;max-width:92vw;height:520px;max-height:78vh;
   background:#0b0b0c;border-radius:16px;box-shadow:0 20px 48px rgba(0,0,0,.55), 0 0 0 1px #2a2a2a inset;
@@ -218,7 +204,6 @@ WIDGET_CSS = r"""
 
 app = FastAPI(title="ShopChat Minimal")
 
-# Povolené domény (uprav v prostredí na tvoju Shoptet doménu)
 ALLOWED = os.getenv("ALLOWED_ORIGIN", "*")
 app.add_middleware(
     CORSMiddleware,
@@ -234,30 +219,18 @@ async def healthz():
 
 @app.post("/api/message")
 async def message(payload: dict):
-    # Pôvodný text a jeho lowercase varianta
     raw = (payload.get("text") or "").strip()
     low = raw.lower()
 
-   # --- Špeciál: žiadosť o termín posielame e-mailom ---
-# Tolerantné: stačí "termín ..." alebo "termin ...", dvojbodka je voliteľná
-if (low.startswith("termín") or low.startswith("termin")) and (":" in low or len(low.split()) > 1):
-    subject = "Žiadosť o termín - web chat"
-    body = f"Správa od návštevníka:\n\n{raw}"
-    ok = send_mail(subject=subject, body=body)
+    if low.startswith("termín:") or low.startswith("termin:"):
+        subject = "Žiadosť o termín - web chat"
+        body = f"Správa od návštevníka:\n\n{raw}"
+        ok = send_mail(subject=subject, body=body)
+        if ok:
+            return JSONResponse({"reply": "Ďakujem! Poslal som to do e-mailu. Ozveme sa čoskoro. 📬","suggestions": SUGGESTIONS})
+        else:
+            return JSONResponse({"reply": "Mrzí ma to, e-mail sa nepodarilo odoslať. Skúste prosím ešte raz alebo nás kontaktujte telefonicky.","suggestions": SUGGESTIONS})
 
-    if ok:
-        return JSONResponse({
-            "reply": "Ďakujem! Poslal som to do e-mailu. Ozveme sa čoskoro. 📬",
-            "suggestions": SUGGESTIONS
-        })
-    else:
-        return JSONResponse({
-            "reply": "Mrzí ma to, e-mail sa nepodarilo odoslať. Skúste prosím ešte raz alebo nás kontaktujte telefonicky.",
-            "suggestions": SUGGESTIONS
-        })
-
-
-    # --- Odpovede podľa kľúčových slov ---
     if "cenn" in low:
         reply = INTENTS["cenník"]
     elif "svetlo" in low:
@@ -265,7 +238,7 @@ if (low.startswith("termín") or low.startswith("termin")) and (":" in low or le
     elif "ppf" in low:
         reply = INTENTS["ochranná ppf fólia quap"]
     elif "term" in low or "rezerv" in low:
-        reply = INTENTS["termín"]
+        reply = "📅 Rád ti pomôžem s termínom. Pošli mi model auta a dátum, ktorý ti vyhovuje, a ozveme sa."
     elif "interi" in low:
         reply = INTENTS["čistenie interiéru"]
     elif "exteri" in low or "umýv" in low or "umyv" in low:
