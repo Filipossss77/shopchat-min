@@ -75,7 +75,9 @@ WIDGET_JS = r"""
   function addMsg(txt,who){
     const d=document.createElement('div');
     d.className='msg '+who;
-    if(who==='bot' && /<a\s/i.test(txt)) d.innerHTML=txt; else d.textContent=txt;
+    // POVOLÍME HTML len pre odkazy a naše PPF karty
+    if (who==='bot' && /<a\s|class="ppf-cards"/i.test(txt)) d.innerHTML = txt;
+    else d.textContent = txt;
     body.appendChild(d);
     body.scrollTop=body.scrollHeight;
     return d;
@@ -94,25 +96,39 @@ WIDGET_JS = r"""
     body.scrollTop=body.scrollHeight;
   }
 
-  // === ÚPRAVA: PPF follow-up s väčšími rozostupmi + otázka na kontakt ===
+  // PPF follow-up (cenník + kontakt) – teraz formou kariet
   function showPPFQuestion(){
     addMsg("Chceš spraviť cenník na svoje auto?",'bot');
     addButtons(["Áno","Nie"],(answer,wrap)=>{
       addMsg(answer,'user');
       wrap.remove();
       if(answer==="Áno"){
-        const pricing =
-          "ŠTANDARD\\n" +
-          "(kapota, predný nárazník, predné svetlá, spätné zrkadlá) — od 800€\\n\\n" +
-          "PREMIUM\\n" +
-          "(kapota, predný nárazník, predné blatníky, predné svetlá, spätné zrkadlá, predná strecha, A stĺpiky) — od 1200€\\n\\n" +
-          "KOMPLET\\n" +
-          "(celé auto) — od 2400€\\n\\n" +
-          "INDIVIDUÁL\\n" +
-          "(balík na mieru vyskladaný podľa vás) — cena dohodou";
-        addMsg(pricing,'bot');
+        const cards = `
+<div class="ppf-cards">
+  <div class="ppf-card">
+    <div class="t">ŠTANDARD</div>
+    <div class="d">(kapota, predný nárazník, predné svetlá, spätné zrkadlá)</div>
+    <div class="p">od 800€</div>
+  </div>
+  <div class="ppf-card">
+    <div class="t">PREMIUM</div>
+    <div class="d">(kapota, predný nárazník, predné blatníky, predné svetlá, spätné zrkadlá, predná strecha, A stĺpiky)</div>
+    <div class="p">od 1200€</div>
+  </div>
+  <div class="ppf-card">
+    <div class="t">KOMPLET</div>
+    <div class="d">(celé auto)</div>
+    <div class="p">od 2400€</div>
+  </div>
+  <div class="ppf-card">
+    <div class="t">INDIVIDUÁL</div>
+    <div class="d">(balík na mieru vyskladaný podľa vás)</div>
+    <div class="p">cena dohodou</div>
+  </div>
+</div>`;
+        addMsg(cards, 'bot');
 
-        // NOVÉ: otázka na kontakt po cenníku
+        // otázka na kontakt
         addMsg("Chceš nás kontaktovať?", 'bot');
         addButtons(["Áno","Nie"], (ans2, wrap2)=>{
           addMsg(ans2, 'user');
@@ -128,7 +144,6 @@ WIDGET_JS = r"""
       }
     });
   }
-  // === KONIEC ÚPRAVY ===
 
   function addSuggestions(){
     const b=document.createElement('div');b.className='suggestions';
@@ -228,6 +243,32 @@ WIDGET_CSS = r"""
 .msg.bot{background:#111214;color:var(--text);}
 .suggestions,.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
 .suggestions button,.actions button{border:1px solid var(--muted);background:var(--bg);color:var(--gold);padding:6px 10px;border-radius:999px;font:12px var(--font);cursor:pointer;}
+
+/* PPF cards */
+.ppf-cards{
+  display:grid;
+  gap:8px;
+  margin:8px 0;
+}
+.ppf-card{
+  border:1px solid var(--muted);
+  background:var(--bg);
+  border-radius:10px;
+  padding:10px 12px;
+}
+.ppf-card .t{
+  font-weight:700;
+  color:var(--gold);
+  margin-bottom:4px;
+}
+.ppf-card .d{
+  font-size:13px;
+  opacity:.9;
+}
+.ppf-card .p{
+  margin-top:6px;
+  font-weight:700;
+}
 """
 
 app = FastAPI(title="GaVaTep Chat")
@@ -265,4 +306,5 @@ async def message(payload: dict):
     else:
         reply = "Rozumiem. Môžem poslať info o službách alebo cenník."
     return JSONResponse({"reply": reply, "suggestions": SUGGESTIONS})
+
 
