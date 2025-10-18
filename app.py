@@ -200,18 +200,34 @@ alebo prémiové riešenie – PPF fóliu, ktorá chráni pred UV žiarením, š
     body.appendChild(b);
   }
 
-  // otváranie/closing
-  bubble.onclick=()=>{panel.style.display='flex'};
-  panel.querySelector('#closechat').onclick=()=>panel.style.display='none';
+// otváranie/closing + auto-open
+const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
 
-  // prvé otvorenie = pozdrav + návrhy
-  bubble.addEventListener('click',()=>{
-    if(!body.dataset.init){
-      addMsg('Ahoj 👋 Ako ti môžem pomôcť?','bot');
-      addSuggestions();
-      body.dataset.init='1';
-    }
-  });
+function openChat(){
+  panel.style.display = 'flex';
+  try {
+    audio.currentTime = 0;
+    audio.play();
+  } catch(_) {}
+
+  // aby sa pri auto-otvorení zobrazil aj úvod a návrhy (rovnako ako pri kliku)
+  if(!body.dataset.init){
+    addMsg('Ahoj 👋 Ako ti môžem pomôcť?','bot');
+    addSuggestions();
+    body.dataset.init = '1';
+  }
+}
+
+// klik na bublinu = otvorenie
+bubble.addEventListener('click', openChat);
+
+// krížik = zavrieť
+panel.querySelector('#closechat').addEventListener('click', ()=>{ panel.style.display='none'; });
+
+// automatické otvorenie po načítaní DOM (krátke oneskorenie kvôli istote)
+document.addEventListener('DOMContentLoaded', ()=>{ setTimeout(openChat, 200); });
+
+
 
   // odoslanie textu
   function sendIfNotEmpty(){
