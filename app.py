@@ -68,7 +68,7 @@ SUGGESTIONS = ["CENNÍK", "SVETLOMETY", "PPF", "TERMÍN"]
 WIDGET_JS = r"""
 (function () {
   // Umožniť override: window.SHOPCHAT_API = 'https://tvoja-domena/api/message'
-  const API = (window.SHOPCHAT_API || '/api/message');
+  const API = (window.SHOPCHAT_API || 'https://shopchat-min-2.onrender.com/api/message');
 
   // --- vytvorenie bubliny/panelu ---
   const bubble = document.createElement('div'); bubble.id='shopchat-bubble'; bubble.innerText='Chat';
