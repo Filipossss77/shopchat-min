@@ -11,6 +11,7 @@ SMTP_PASS = os.getenv("SMTP_PASS", "")
 SMTP_FROM = os.getenv("SMTP_FROM", SMTP_USER)
 SMTP_TO = os.getenv("SMTP_TO", "tepovacieprace.gava@gmail.com")
 
+
 def send_mail(subject: str, body: str, to: str | None = None) -> bool:
     try:
         recipient = to or SMTP_TO
@@ -41,6 +42,7 @@ INTENTS = {
 
 SUGGESTIONS = ["CENNÍK", "SVETLOMETY", "INTERIÉR", "EXTERIÉR", "KERAMICKÁ", "PPF"]
 
+
 WIDGET_JS = r"""
 (function(){
   const RESPONSES = {
@@ -59,82 +61,156 @@ WIDGET_JS = r"""
   const panel=document.createElement('div');
   panel.id='shopchat-panel';
   panel.innerHTML=`
-    <div id='shopchat-header'><span>GaVaTep Chat</span><button id='closechat'>×</button></div>
+    <div id='shopchat-header'><span>GaVaTep Chat</span><button id='closechat' aria-label='Zavrieť'>×</button></div>
     <div id='shopchat-body'></div>
-    <div id='shopchat-input'><input placeholder='Napíš správu...'><button>Poslať</button></div>
+    <div id='shopchat-input'><input placeholder='Napíš správu...'><button aria-label='Poslať'>Poslať</button></div>
   `;
   document.body.appendChild(panel);
   panel.style.display='none';
 
-  bubble.onclick=()=>panel.style.display='flex';
-  panel.querySelector('#closechat').onclick=()=>panel.style.display='none';
-
   const body=panel.querySelector('#shopchat-body');
   const input=panel.querySelector('input');
-  const send=panel.querySelector('button');
+  const send=panel.querySelector('#shopchat-input button');
 
   function addMsg(txt,who){
     const d=document.createElement('div');
     d.className='msg '+who;
-    if(who==='bot' && txt.includes('<a')) d.innerHTML=txt; else d.textContent=txt;
+    if(who==='bot' && /<a\s/i.test(txt)) d.innerHTML=txt; else d.textContent=txt;
     body.appendChild(d);
+    body.scrollTop=body.scrollHeight;
+    return d;
+  }
+
+  function addButtons(labels,onClick){
+    const wrap=document.createElement('div');
+    wrap.className='actions';
+    labels.forEach(label=>{
+      const b=document.createElement('button');
+      b.textContent=label;
+      b.onclick=()=>onClick(label,wrap);
+      wrap.appendChild(b);
+    });
+    body.appendChild(wrap);
     body.scrollTop=body.scrollHeight;
   }
 
-  function addButtons(){
+  function showPPFQuestion(){
+    addMsg("Chceš spraviť cenník na svoje auto?",'bot');
+    addButtons(["Áno","Nie"],(answer,wrap)=>{
+      addMsg(answer,'user');
+      wrap.remove();
+      if(answer==="Áno"){
+        const pricing=[
+          "ŠTANDARD — (kapota, predný nárazník, predné svetlá, spätné zrkadlá) — od 800€",
+          "PREMIUM — (kapota, predný nárazník, predné blatníky, predné svetlá, spätné zrkadlá, predná strecha, A stĺpiky) — od 1200€",
+          "KOMPLET — (celé auto) — od 2400€",
+          "INDIVIDUÁL — (balík na mieru vyskladaný podľa vás) — cena dohodou"
+        ].join("\\n");
+        addMsg(pricing,'bot');
+      } else {
+        addMsg("OK — ak chceš neskôr, ozvi sa, alebo napíš model auta a vyrobíme presnú kalkuláciu. 🙂",'bot');
+      }
+    });
+  }
+
+  function addSuggestions(){
     const b=document.createElement('div');b.className='suggestions';
     ["Cenník","Renovácia svetlometov","Čistenie interiéru","Čistenie exteriéru","Keramická ochrana","Ochranná PPF fólia Quap"].forEach(t=>{
       const btn=document.createElement('button');btn.textContent=t;
       btn.onclick=()=>{
         addMsg(t,'user');
         const key=t.toLowerCase();
-        if(RESPONSES[key]) setTimeout(()=>addMsg(RESPONSES[key],'bot'),200);
-        else if(key.includes('cenn')) window.open('https://gavatep.eu/cennik','_blank');
+        if(key.includes('cenn')) {
+          window.open('https://gavatep.eu/cennik','_blank','noopener');
+          return;
+        }
+        if(RESPONSES[key]){
+          setTimeout(()=>{
+            addMsg(RESPONSES[key],'bot');
+            if(key.includes('ppf')) showPPFQuestion();
+          },200);
+        }
       };
       b.appendChild(btn);
     });
     body.appendChild(b);
   }
 
+  // otvorí sa automaticky raz po 1s
+  window.addEventListener('load',()=>{
+    setTimeout(()=>{
+      if(!localStorage.getItem('chatOpenedOnce')){
+        bubble.click();
+        localStorage.setItem('chatOpenedOnce','1');
+      }
+    },1000);
+  });
+
+  bubble.onclick=()=>{panel.style.display='flex'};
+  panel.querySelector('#closechat').onclick=()=>panel.style.display='none';
+
   bubble.addEventListener('click',()=>{
     if(!body.dataset.init){
       addMsg('Ahoj 👋 Ako ti môžem pomôcť?','bot');
-      addButtons();
+      addSuggestions();
       body.dataset.init='1';
     }
   });
+
+  function sendIfNotEmpty(){
+    const v=(input.value||"").trim();
+    if(!v)return;
+    addMsg(v,'user');input.value='';
+    const low=v.toLowerCase();
+    if(RESPONSES[low]){
+      setTimeout(()=>{
+        addMsg(RESPONSES[low],'bot');
+        if(/ppf/.test(low))showPPFQuestion();
+      },150);
+      return;
+    }
+  }
+
+  send.onclick=sendIfNotEmpty;
+  input.addEventListener('keydown',e=>{if(e.key==='Enter')sendIfNotEmpty();});
 })();
 """
 
 WIDGET_CSS = r"""
+:root{
+  --gold:#d4af37;
+  --bg:#0b0b0c;
+  --bg2:#0f0f10;
+  --text:#e9e9ea;
+  --muted:#2a2a2a;
+  --font: Inter, system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+}
 #shopchat-bubble{
-  position:fixed;right:20px;bottom:20px;width:60px;height:60px;
-  border-radius:50%;background:#0f0f10;color:#d4af37;
+  position:fixed;right:20px;bottom:20px;width:64px;height:64px;border-radius:50%;
+  background:var(--bg2);color:var(--gold);
   display:flex;align-items:center;justify-content:center;
-  font-weight:700;cursor:pointer;z-index:9999;
-  box-shadow:0 4px 20px rgba(0,0,0,.5);
+  font:700 16px var(--font);cursor:pointer;z-index:999999;
+  border:2px solid var(--gold);
+  box-shadow:0 8px 30px rgba(0,0,0,.45),0 0 0 3px rgba(212,175,55,.15);
+  transition:transform .2s ease, box-shadow .2s ease;
 }
+#shopchat-bubble:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(0,0,0,.55),0 0 0 5px rgba(212,175,55,.22);}
 #shopchat-panel{
-  position:fixed;right:20px;bottom:90px;width:360px;max-width:95vw;
-  height:500px;background:#0b0b0c;color:#fff;border-radius:12px;
-  box-shadow:0 4px 40px rgba(0,0,0,.6);
-  display:none;flex-direction:column;z-index:9998;
+  position:fixed;right:20px;bottom:96px;width:380px;max-width:95vw;height:520px;
+  background:var(--bg);border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 0 1px var(--muted) inset;
+  display:none;flex-direction:column;overflow:hidden;z-index:999998;font-family:var(--font);
 }
-#shopchat-header{
-  background:#0f0f10;color:#d4af37;padding:10px 14px;
-  display:flex;justify-content:space-between;align-items:center;
-  font-weight:700;
-}
-#shopchat-header button{background:none;border:none;color:#d4af37;font-size:20px;cursor:pointer}
-#shopchat-body{flex:1;overflow:auto;padding:10px;font-size:14px}
-#shopchat-input{display:flex;gap:8px;padding:10px;background:#0f0f10}
-#shopchat-input input{flex:1;border-radius:8px;border:1px solid #333;background:#0b0b0c;color:#fff;padding:8px}
-#shopchat-input button{background:#d4af37;border:none;color:#111;font-weight:700;padding:8px 12px;border-radius:8px;cursor:pointer}
-.msg{margin:6px 0;padding:8px 12px;border-radius:10px;max-width:80%}
-.msg.user{background:#1d3557;margin-left:auto}
-.msg.bot{background:#2a2a2a}
-.suggestions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.suggestions button{border:1px solid #333;background:#0b0b0c;color:#d4af37;padding:6px 8px;border-radius:20px;cursor:pointer}
+#shopchat-header{padding:12px 14px;background:var(--bg2);color:var(--gold);display:flex;justify-content:space-between;align-items:center;font-weight:700;border-bottom:1px solid var(--muted);}
+#shopchat-header button{background:none;border:none;color:var(--gold);font-size:18px;cursor:pointer;}
+#shopchat-body{flex:1;padding:12px;overflow:auto;background:var(--bg);color:var(--text);}
+#shopchat-input{display:flex;gap:8px;padding:10px;background:var(--bg2);border-top:1px solid var(--muted);}
+#shopchat-input input{flex:1;padding:10px 12px;border:1px solid var(--muted);border-radius:10px;background:var(--bg);color:var(--text);}
+#shopchat-input button{padding:10px 12px;border-radius:10px;border:none;background:var(--gold);color:#111;font-weight:700;}
+.msg{max-width:80%;margin:6px 0;padding:10px 12px;border-radius:12px;font:14px/1.35 var(--font);}
+.msg.user{background:#19324a;color:#e9f2ff;margin-left:auto;}
+.msg.bot{background:#111214;color:var(--text);}
+.suggestions,.actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.suggestions button,.actions button{border:1px solid var(--muted);background:var(--bg);color:var(--gold);padding:6px 10px;border-radius:999px;font:12px var(--font);cursor:pointer;}
 """
 
 app = FastAPI(title="GaVaTep Chat")
@@ -167,8 +243,8 @@ async def message(payload: dict):
         reply = INTENTS["čistenie exteriéru"]
     elif "keram" in text:
         reply = INTENTS["keramická ochrana"]
-    elif "ppf" in text:
-        reply = INTENTS["ochranná ppf fólia quap"]
+    elif "ppf" in text or "fólia" in text or "folia" in text:
+        reply = INTENTS["ochranná пpf fólia quap"]
     else:
         reply = "Rozumiem. Môžem poslať info o službách alebo cenník."
     return JSONResponse({"reply": reply, "suggestions": SUGGESTIONS})
