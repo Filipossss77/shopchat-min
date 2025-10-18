@@ -19,89 +19,101 @@ SUGGESTIONS = ["CENNÍK", "SVETLOMETY", "PPF", "TERMÍN"]
 
 # --- Mini widget (CSS/JS) ---
 WIDGET_JS = """
-(function(){
-  const API = (window.SHOPCHAT_API || "/api/message");
+(function () {
+  const API = (window.SHOPCHAT_API || '/api/message');
 
+  // --- vytvorenie bubliny/panelu ---
   const bubble = document.createElement('div'); bubble.id='shopchat-bubble'; bubble.innerText='Chat';
-  const panel = document.createElement('div'); panel.id='shopchat-panel';
+  const panel  = document.createElement('div'); panel.id='shopchat-panel';
   const header = document.createElement('div'); header.id='shopchat-header';
-  header.innerHTML='<span>GaVaTep Chat</span><button id="shopchat-close" style="background:transparent;border:0;color:#d4af37;font-size:16px;cursor:pointer">x</button>';
-  const body = document.createElement('div'); body.id='shopchat-body';
-  const input = document.createElement('div'); input.id='shopchat-input';
-  const field = document.createElement('input'); field.placeholder='Napíš správu...';
-  const send = document.createElement('button'); send.innerText='Poslať';
-  input.append(field, send); panel.append(header, body, input); document.body.append(bubble, panel);
-  // auto-open iba pri prvej návšteve
-try {
-  if (!localStorage.getItem('gavatep_chat_opened')) {
-    panel.style.display = 'flex';
-    localStorage.setItem('gavatep_chat_opened','1');
-  }
-} catch(e){}
+  header.innerHTML = '<span>GaVaTep Chat</span><button id="shopchat-close" style="background:transparent;border:0;color:#d4af37;font-size:16px;cursor:pointer">×</button>';
+  const body   = document.createElement('div'); body.id='shopchat-body';
+  const input  = document.createElement('div'); input.id='shopchat-input';
+  const field  = document.createElement('input'); field.placeholder='Napíš správu…';
+  const send   = document.createElement('button'); send.innerText='Poslať';
 
+  input.append(field, send);
+  panel.append(header, body, input);
+  document.body.append(bubble, panel);
+
+  // auto-open iba pri prvej návšteve
+  try {
+    if (!localStorage.getItem('gavatep_chat_opened')) {
+      panel.style.display = 'flex';
+      localStorage.setItem('gavetaep_chat_opened', '1');
+    }
+  } catch(e){}
 
   function show(){ panel.style.display='flex'; }
   function hide(){ panel.style.display='none'; }
-  bubble.onclick=show; header.querySelector('#shopchat-close').onclick=hide;
+  bubble.onclick = show;
+  header.querySelector('#shopchat-close').onclick = hide;
 
   function addMsg(text, who){
-    const m=document.createElement('div'); m.className='msg '+who; m.textContent=text;
-    body.appendChild(m); body.scrollTop=body.scrollHeight;
+    const m = document.createElement('div');
+    m.className = 'msg ' + who;
+    m.textContent = text;
+    body.appendChild(m);
+    body.scrollTop = body.scrollHeight;
   }
+
   function addSuggestions(items){
-  const wrap = document.createElement('div');
-  wrap.className = 'suggestions';
+    const wrap = document.createElement('div');
+    wrap.className = 'suggestions';
 
-  items.forEach((t) => {
-    const b = document.createElement('button');
-    b.textContent = t;
+    items.forEach((t) => {
+      const b = document.createElement('button');
+      b.textContent = t;
 
-    // Špeciálne správanie pre "Cenník"
-    if (t.toLowerCase() === 'cenník' || t.toLowerCase() === 'cennik') {
-      b.addEventListener('click', (e) => {
-        e.preventDefault();
-        // otvorí cenník v novej karte
-        window.open('https://gabatep.eu/cennik', '_blank', 'noopener');
-      });
-    } else {
-      // pôvodné správanie – pošle text ako správu
-      b.addEventListener('click', () => {
-        field.value = t;
-        send.click();
-      });
-    }
+      // špeciálne: Cenník otvorí stránku
+      if (t.toLowerCase() === 'cenník' || t.toLowerCase() === 'cennik') {
+        b.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.open('https://gavatep.eu/cennik', '_blank', 'noopener');
+        });
+      } else {
+        // ostatné vypočítajú odpoveď ako doteraz
+        b.addEventListener('click', () => {
+          field.value = t;
+          send.click();
+        });
+      }
+      wrap.appendChild(b);
+    });
 
-    wrap.appendChild(b);
-  });
-
-  body.appendChild(wrap);
-}
-
+    body.appendChild(wrap);
   }
 
-  // greeting
-  addMsg('Ahoj! Ako sa maš ? S čím ti môžem pomôcť?', 'bot');
+  // greeting + návrhy
+  addMsg('Ahoj! Ako sa máš? S čím ti môžem pomôcť?', 'bot');
   addSuggestions([
-  'Termím',
-  'Cenník',
-  'Renovácia Svetlometov',
-  'Čistenie interiéru',
-  'Čistenie exteriéru',
-  'Keramická Ochrana',
-  'Ohranná PPF Folia Quap'
+    'Termín',
+    'Cenník',
+    'Renovácia Svetlometov',
+    'Čistenie interiéru',
+    'Čistenie exteriéru',
+    'Keramická Ochrana',
+    'Ochranná PPF Folia Quap'
   ]);
 
   async function ask(text){
-    addMsg(text,'user'); field.value='';
-    const r = await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
-    const j = await r.json();
-    addMsg(j.reply || 'Skús to ešte raz 🙂', 'bot');
+    addMsg(text, 'user'); field.value='';
+    try{
+      const r = await fetch(API,{method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({text})});
+      const j = await r.json();
+      addMsg(j.reply || 'Skús to ešte raz 🙂', 'bot');
+    }catch(_){
+      addMsg('Ups, skúšam znova neskôr.', 'bot');
+    }
   }
 
-  send.onclick=()=>{ if(field.value.trim()) ask(field.value.trim()); };
-  field.addEventListener('keydown',e=>{ if(e.key==='Enter') send.click(); });
+  send.onclick = () => {
+    if ((field.value.trim()).length) ask(field.value.trim());
+  };
+  field.addEventListener('keydown', (ev) => { if(ev.key==='Enter') send.click(); });
 })();
 """
+
 
 
 WIDGET_CSS = """
