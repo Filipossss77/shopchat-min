@@ -124,17 +124,19 @@ WIDGET_JS = r"""
           e.preventDefault();
           window.open('https://gavatep.eu/cennik', '_blank', 'noopener');
         });
-      } else {
-        b.addEventListener('click', () => {
-          field.value = t;
-          send.click();
-        });
-      }
-      wrap.appendChild(b);
-    });
-
-    body.appendChild(wrap);
-  }
+     } else {
+  b.addEventListener('click', () => {
+    const tl = t.toLowerCase();
+    // Pri "Termín" užívateľ ešte doplní údaje; nespúšťame hneď odoslanie
+    if (tl.startsWith('termín') || tl.startsWith('termin')) {
+      field.value = 'Termín: ';
+      field.focus();
+    } else {
+      field.value = t;
+      send.click();
+    }
+  });
+}
 
   // greeting + návrhy
   addMsg('Ahoj! Ako sa máš? S čím ti môžem pomôcť?', 'bot');
@@ -236,23 +238,24 @@ async def message(payload: dict):
     raw = (payload.get("text") or "").strip()
     low = raw.lower()
 
-    # --- Špeciál: žiadosť o termín posielame e-mailom ---
-    # Príklad formátu: "Termín: Octavia, 25.11., tel: 0900 000 000"
-    if low.startswith("termín:") or low.startswith("termin:"):
-        subject = "Žiadosť o termín - web chat"
-        body = f"Správa od návštevníka:\n\n{raw}"
-        ok = send_mail(subject=subject, body=body)
+   # --- Špeciál: žiadosť o termín posielame e-mailom ---
+# Tolerantné: stačí "termín ..." alebo "termin ...", dvojbodka je voliteľná
+if (low.startswith("termín") or low.startswith("termin")) and (":" in low or len(low.split()) > 1):
+    subject = "Žiadosť o termín - web chat"
+    body = f"Správa od návštevníka:\n\n{raw}"
+    ok = send_mail(subject=subject, body=body)
 
-        if ok:
-            return JSONResponse({
-                "reply": "Ďakujem! Poslal som to do e-mailu. Ozveme sa čoskoro. 📬",
-                "suggestions": SUGGESTIONS
-            })
-        else:
-            return JSONResponse({
-                "reply": "Mrzí ma to, e-mail sa nepodarilo odoslať. Skúste prosím ešte raz alebo nás kontaktujte telefonicky.",
-                "suggestions": SUGGESTIONS
-            })
+    if ok:
+        return JSONResponse({
+            "reply": "Ďakujem! Poslal som to do e-mailu. Ozveme sa čoskoro. 📬",
+            "suggestions": SUGGESTIONS
+        })
+    else:
+        return JSONResponse({
+            "reply": "Mrzí ma to, e-mail sa nepodarilo odoslať. Skúste prosím ešte raz alebo nás kontaktujte telefonicky.",
+            "suggestions": SUGGESTIONS
+        })
+
 
     # --- Odpovede podľa kľúčových slov ---
     if "cenn" in low:
