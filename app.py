@@ -67,6 +67,16 @@ WIDGET_JS = r"""
 (function () {
   const API = (window.SHOPCHAT_API || 'https://shopchat-min-2.onrender.com/api/message');
 
+  // --- Preddefinované odpovede (lokálna mapa pre rýchle odpovede bez volania na server) ---
+  const RESPONSES = {
+    "renovácia svetlometov": "💡 Renovácia svetlometov len za 30 €. Obnova čírosti, ochrana a profesionálny výsledok.",
+    "čistenie interiéru": "🧽 Čisteniu interiéru venujeme maximálnu pozornosť — detailné čistenie všetkých povrchov, sedačiek aj plastov.",
+    "čistenie exteriéru": "🚗 Je to pekne čisté a lesklé — umývanie karosérie, dekontaminácia laku a aplikácia ochrany.",
+    "keramická ochrana": "🛡️ Keramická ochrana zabezpečí lesk a odolnosť až na 5 rokov.",
+    "ochranná ppf folia quap": "💎 PPF fólia je najlepšia ochrana, aká existuje — chráni lak pred kamienkami, škrabancami aj UV žiarením."
+  };
+
+  // --- UI ---
   const bubble = document.createElement('div'); bubble.id='shopchat-bubble'; bubble.innerText='Chat';
   const panel  = document.createElement('div'); panel.id='shopchat-panel';
   const header = document.createElement('div'); header.id='shopchat-header';
@@ -105,6 +115,10 @@ WIDGET_JS = r"""
   }
 
   function addSuggestions(items){
+    // odstráni predchádzajúce návrhy ak sú
+    const prev = body.querySelector('.suggestions');
+    if (prev) prev.remove();
+
     const wrap = document.createElement('div');
     wrap.className = 'suggestions';
 
@@ -112,6 +126,7 @@ WIDGET_JS = r"""
       const b = document.createElement('button');
       b.textContent = t;
 
+      // Cenník otvorí stránku priamo
       if (t.toLowerCase() === 'cenník' || t.toLowerCase() === 'cennik') {
         b.addEventListener('click', (e) => {
           e.preventDefault();
@@ -119,6 +134,15 @@ WIDGET_JS = r"""
         });
       } else {
         b.addEventListener('click', () => {
+          // ak máme lokálnu odpoveď v RESPONSES, zobrazíme ju okamžite
+          const key = t.toLowerCase();
+          if (RESPONSES[key]) {
+            addMsg(t, 'user');
+            // krátke načasovanie, aby to vyzeralo prirodzene
+            setTimeout(() => addMsg(RESPONSES[key], 'bot'), 250);
+            return;
+          }
+          // inak pošleme text na backend (fallback)
           field.value = t;
           send.click();
         });
@@ -127,8 +151,10 @@ WIDGET_JS = r"""
     });
 
     body.appendChild(wrap);
+    body.scrollTop = body.scrollHeight;
   }
 
+  // greeting + návrhy
   addMsg('Ahoj! Ako sa máš? S čím ti môžem pomôcť?', 'bot');
   addSuggestions([
     'Cenník',
@@ -150,6 +176,8 @@ WIDGET_JS = r"""
       if (!r.ok) throw new Error('HTTP '+r.status);
       const j = await r.json();
       addMsg(j.reply || 'Skús to ešte raz 🙂', 'bot');
+
+      // voliteľne zobraz návrhy z API
       if (Array.isArray(j.suggestions) && j.suggestions.length) {
         addSuggestions(j.suggestions);
       }
