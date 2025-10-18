@@ -49,14 +49,14 @@ def send_mail(subject: str, body: str, to: str | None = None) -> bool:
         return False
 
 
-# --- Odpovede podľa tém ---
+# --- Odpovede podľa tém (serverová strana, keď návštevník píše textom) ---
 INTENTS = {
     "termín": "📅 Rád ti pomôžem s termínom. Pošli mi model auta a dátum, ktorý ti vyhovuje, a ozveme sa.",
-    "renovácia svetlometov": "💡 Renovácia svetlometov len za 30 € ks.Bez Ochrany proti UV žiareniu Obnova čírosti, ochrana a profesionálny výsledok.",
-    "čistenie interiéru": "🧽 Čisteniu interiéru venujeme maximálnu pozornosť — detailné čistenie všetkých povrchov, sedačiek aj plastov. Našu pracu si viete pozret na našom instagrame link na stranke ",
-    "čistenie exteriéru": "🚗 Exterier zahřna detailne umývanie karosérie, dekontaminácia laku-živica,asfalt,náletova Hrzda.",
-    "keramická ochrana": "🛡️ Keramická ochrana zabezpečí lesk a odolnosť až na 5 rokov.",
-    "ochranná ppf fólia quap": "💎 PPF fólia je najlepšia ochrana, aká existuje — chráni  vozidla pred poškodením ako sú škrabance, kamienky, nečistoty, UV žiarenie. Hydrofóbnosť ma ako jednu zo svojich top vlastnosti.Samozrejme aj samoregenracia ktora patri asi uplne hore čo sa tika ochrany laku a taktiez zaruka 10 rokov na vyblednutie a popraskanie ",
+    "renovácia svetlometov": "✨ Renovácia svetlometov K2 Vapron ✨ Tvoje svetlá nemusia žiariť len v noci, ale aj na pohľad 😎 Pomocou K2 Vapron im vrátime pôvodný lesk a priehľadnosť 🔧💡 Odstránime zažltnutie, matný povrch a ochránime ich pred UV žiarením ☀️ 🚘 Výsledok? Čisté, jasné a ako nové svetlá – pripravené ukázať cestu 🌙",
+    "čistenie interiéru": "🧼 Detailné čistenie interiéru 🧽✨ Každý detail má svoj význam 💺 Interiér tvojho auta si zaslúži viac než len vysávač – venujeme mu 100 % pozornosť 👀 Vyčistíme všetky zákutia, špáry, plasty, sedadlá aj koberce 🚗💨 Odstránime prach, škvrny a zápach, aby si sa cítil ako v novom aute 🌿 Po našej práci zostane interiér čistý, svieži a lesklý 🌟",
+    "čistenie exteriéru": "🚘 Detailné čistenie exteriéru 💦✨ Tvoj lak si zaslúži špeciálnu starostlivosť, nie rýchlu umyvárku 🧽 Každý centimeter karosérie dôkladne umyjeme, dekontaminujeme od hrdze, asfaltu a nečistôt 🧴🔧 Používame šetrné produkty, ktoré chránia lak a zanechajú hlboký lesk 🌞 Po našom čistení je auto hladké na dotyk, lesklé na pohľad a pripravené na ochranu 💪",
+    "keramická ochrana": "🛡️ Keramická ochrana laku K2 Gravon – až na 5 rokov ✨ Dopraj svojmu autu trvácnu ochranu, ktorá hneď vidieť 👀 K2 Gravon vytvára tvrdý keramický štít, ktorý chráni lak pred UV žiarením, špinou, soľou aj chemikáliami 🚘💎 Auto ostáva dlhšie čisté, voda sa krásne odperľuje 💧 a lesk vydrží roky 🌞 To nie je len lesk – to je ochrana, ktorú cítiš na každom pohľade 🔥",
+    "ochranná ppf fólia quap": "Keď chceš, aby tvoj lak vyzeral dlhodobo ako nový, je tu PPF fólia QUAP 🚘 Chráni pred škrabancami, kamienkami, hmyzom aj chemikáliami 🧤 Samoregeneračný povrch zahojí drobné škrabance teplom ☀️🔥 Lak zostáva dokonale lesklý, hladký a stále chránený 💧 To najlepšie, čo môžeš dať svojmu autu.",
     "cenník": "<a href='https://gabatep.eu/cennik' target='_blank' rel='noopener'>💰 Otvor stránku Cenník</a>",
 }
 
@@ -67,13 +67,14 @@ WIDGET_JS = r"""
 (function () {
   const API = (window.SHOPCHAT_API || 'https://shopchat-min-2.onrender.com/api/message');
 
-  // --- Preddefinované odpovede (lokálna mapa pre rýchle odpovede bez volania na server) ---
+  // --- Preddefinované odpovede (lokálne – okamžite po kliku) ---
   const RESPONSES = {
-    "renovácia svetlometov": "💡 Renovácia svetlometov len za 30 €. Obnova čírosti, ochrana a profesionálny výsledok.",
-    "čistenie interiéru": "🧽 Čisteniu interiéru venujeme maximálnu pozornosť — detailné čistenie všetkých povrchov, sedačiek aj plastov.",
-    "čistenie exteriéru": "🚗 Je to pekne čisté a lesklé — umývanie karosérie, dekontaminácia laku a aplikácia ochrany.",
-    "keramická ochrana": "🛡️ Keramická ochrana zabezpečí lesk a odolnosť až na 5 rokov.",
-    "ochranná ppf folia quap": "💎 PPF fólia je najlepšia ochrana, aká existuje — chráni lak pred kamienkami, škrabancami aj UV žiarením."
+    "renovácia svetlometov": "✨ Renovácia svetlometov K2 Vapron ✨ Tvoje svetlá nemusia žiariť len v noci, ale aj na pohľad 😎 Pomocou K2 Vapron im vrátime pôvodný lesk a priehľadnosť 🔧💡 Odstránime zažltnutie, matný povrch a ochránime ich pred UV žiarením ☀️ 🚘 Výsledok? Čisté, jasné a ako nové svetlá – pripravené ukázať cestu 🌙",
+    "čistenie interiéru": "🧼 Detailné čistenie interiéru 🧽✨ Každý detail má svoj význam 💺 Interiér tvojho auta si zaslúži viac než len vysávač – venujeme mu 100 % pozornosť 👀 Vyčistíme všetky zákutia, špáry, plasty, sedadlá aj koberce 🚗💨 Odstránime prach, škvrny a zápach, aby si sa cítil ako v novom aute 🌿 Po našej práci zostane interiér čistý, svieži a lesklý 🌟",
+    "čistenie exteriéru": "🚘 Detailné čistenie exteriéru 💦✨ Tvoj lak si zaslúži špeciálnu starostlivosť, nie rýchlu umyvárku 🧽 Každý centimeter karosérie dôkladne umyjeme, dekontaminujeme od hrdze, asfaltu a nečistôt 🧴🔧 Používame šetrné produkty, ktoré chránia lak a zanechajú hlboký lesk 🌞 Po našom čistení je auto hladké na dotyk, lesklé na pohľad a pripravené na ochranu 💪",
+    "keramická ochrana": "🛡️ Keramická ochrana laku K2 Gravon – až na 5 rokov ✨ Dopraj svojmu autu trvácnu ochranu, ktorá hneď vidieť 👀 K2 Gravon vytvára tvrdý keramický štít, ktorý chráni lak pred UV žiarením, špinou, soľou aj chemikáliami 🚘💎 Auto ostáva dlhšie čisté, voda sa krásne odperľuje 💧 a lesk vydrží roky 🌞 To nie je len lesk – to je ochrana, ktorú cítiš na každom pohľade 🔥",
+    "ochranná ppf fólia quap": "Keď chceš, aby tvoj lak vyzeral dlhodobo ako nový, je tu PPF fólia QUAP 🚘 Chráni pred škrabancami, kamienkami, hmyzom aj chemikáliami 🧤 Samoregeneračný povrch zahojí drobné škrabance teplom ☀️🔥 Lak zostáva dokonale lesklý, hladký a stále chránený 💧 To najlepšie, čo môžeš dať svojmu autu.",
+    "ochranná ppf folia quap": "Keď chceš, aby tvoj lak vyzeral dlhodobo ako nový, je tu PPF fólia QUAP 🚘 Chráni pred škrabancami, kamienkami, hmyzom aj chemikáliami 🧤 Samoregeneračný povrch zahojí drobné škrabance teplom ☀️🔥 Lak zostáva dokonale lesklý, hladký a stále chránený 💧 To najlepšie, čo môžeš dať svojmu autu."
   };
 
   // --- UI ---
@@ -115,7 +116,6 @@ WIDGET_JS = r"""
   }
 
   function addSuggestions(items){
-    // odstráni predchádzajúce návrhy ak sú
     const prev = body.querySelector('.suggestions');
     if (prev) prev.remove();
 
@@ -134,15 +134,14 @@ WIDGET_JS = r"""
         });
       } else {
         b.addEventListener('click', () => {
-          // ak máme lokálnu odpoveď v RESPONSES, zobrazíme ju okamžite
+          // Lokálna okamžitá odpoveď
           const key = t.toLowerCase();
           if (RESPONSES[key]) {
             addMsg(t, 'user');
-            // krátke načasovanie, aby to vyzeralo prirodzene
             setTimeout(() => addMsg(RESPONSES[key], 'bot'), 250);
             return;
           }
-          // inak pošleme text na backend (fallback)
+          // Fallback – pošli na backend
           field.value = t;
           send.click();
         });
@@ -177,7 +176,6 @@ WIDGET_JS = r"""
       const j = await r.json();
       addMsg(j.reply || 'Skús to ešte raz 🙂', 'bot');
 
-      // voliteľne zobraz návrhy z API
       if (Array.isArray(j.suggestions) && j.suggestions.length) {
         addSuggestions(j.suggestions);
       }
@@ -250,6 +248,7 @@ async def message(payload: dict):
     raw = (payload.get("text") or "").strip()
     low = raw.lower()
 
+    # žiadosť o termín cez e-mail
     if low.startswith("termín:") or low.startswith("termin:"):
         subject = "Žiadosť o termín - web chat"
         body = f"Správa od návštevníka:\n\n{raw}"
@@ -259,6 +258,7 @@ async def message(payload: dict):
         else:
             return JSONResponse({"reply": "Mrzí ma to, e-mail sa nepodarilo odoslať. Skúste prosím ešte raz alebo nás kontaktujte telefonicky.","suggestions": SUGGESTIONS})
 
+    # odpovede podľa kľúčových slov
     if "cenn" in low:
         reply = INTENTS["cenník"]
     elif "svetlo" in low:
@@ -268,20 +268,4 @@ async def message(payload: dict):
     elif "term" in low or "rezerv" in low:
         reply = "📅 Rád ti pomôžem s termínom. Pošli mi model auta a dátum, ktorý ti vyhovuje, a ozveme sa."
     elif "interi" in low:
-        reply = INTENTS["čistenie interiéru"]
-    elif "exteri" in low or "umýv" in low or "umyv" in low:
-        reply = INTENTS["čistenie exteriéru"]
-    elif "keram" in low:
-        reply = INTENTS["keramická ochrana"]
-    else:
-        reply = "Rozumiem. Môžem poslať cenník, voľné termíny alebo info o PPF."
-
-    return JSONResponse({"reply": reply, "suggestions": SUGGESTIONS})
-
-@app.get("/widget.css")
-async def widget_css():
-    return PlainTextResponse(WIDGET_CSS, media_type="text/css")
-
-@app.get("/widget.js")
-async def widget_js():
-    return PlainTextResponse(WIDGET_JS, media_type="application/javascript")
+        reply = INTENT
