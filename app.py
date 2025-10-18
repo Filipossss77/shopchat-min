@@ -51,8 +51,15 @@ try {
   }
 
   // greeting
-  addMsg('Ahoj! Pomôžem s cenníkom, termínom alebo PPF.', 'bot');
-  addSuggestions(['CENNÍK','SVETLOMETY','PPF','TERMÍN']);
+  addMsg('Ahoj! Ako sa maš ? S čím ti môžem pomôcť?', 'bot');
+  addSuggestions([
+  'Termím',
+  'Renovácia Svetlometov',
+  'Čistenie interiéru',
+  'Čistenie exteriéru',
+  'Keramická Ochrana',
+  'Ohranná PPF Folia Quap'
+  ]);
 
   async function ask(text){
     addMsg(text,'user'); field.value='';
