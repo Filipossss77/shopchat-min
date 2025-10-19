@@ -214,9 +214,12 @@ alebo prémiové riešenie – PPF fóliu, ktorá chráni pred UV žiarením, š
     const badge = document.createElement('small');
     badge.className = 'open-badge';
     badge.textContent = isOpenNow() ? '• otvorené' : '• zatvorené';
-    badge.style.marginLeft = '8px';
-    badge.style.opacity = '0.85';
-    span.appendChild(badge);
+badge.style.marginLeft = '8px';
+badge.style.opacity = '0.85';
+badge.style.fontWeight = '600';
+badge.style.color = isOpenNow() ? '#1ec41e' : '#e03b3b'; // zelená / červená
+span.appendChild(badge);
+
   }
 })();
 
