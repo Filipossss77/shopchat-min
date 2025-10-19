@@ -233,12 +233,12 @@ alebo prémiové riešenie – PPF fóliu, ktorá chráni pred UV žiarením, š
       // zobraziť s jemnou animáciou
       requestAnimationFrame(() => tip.classList.add('visible'));
 
-      // klik na teaser = otvorí chat (so zvukom) a rovno pozdrav + menu
-      tip.addEventListener('click', () => {
-        tip.remove();
-        bubble.classList.remove('has-badge');
-        bubble.click(); // spustí existujúci handler so zvukom
-      });
+     // keď klikneš priamo na bublinu, teaser zmizne tiež
+bubble.addEventListener('click', () => {
+  const tipEl = document.getElementById('shopchat-teaser');
+  if (tipEl) tipEl.remove();
+  bubble.classList.remove('has-badge');
+});
 
       // zapamätať, že sme už ukázali v tejto session
       sessionStorage.setItem('shopchat_teased','1');
