@@ -104,6 +104,25 @@ WIDGET_JS = r"""
   `;
   document.body.appendChild(panel);
   panel.style.display='none';
+    // --- Zobrazenie stavu "otvorené / zatvorené" v hlavičke ---
+  (function(){
+    const span = panel.querySelector('#shopchat-header span');
+    if (span && !span.querySelector('.open-badge')) {
+      function isOpenNow(d = new Date()){
+        const h = d.getHours();
+        return h >= 8 && h < 20; // otvorené od 8:00 do 20:00
+      }
+      const badge = document.createElement('small');
+      badge.className = 'open-badge';
+      badge.textContent = isOpenNow() ? '• otvorené' : '• zatvorené';
+      badge.style.marginLeft = '8px';
+      badge.style.opacity = '0.85';
+      badge.style.fontWeight = '600';
+      badge.style.color = isOpenNow() ? '#1ec41e' : '#e03b3b'; // zelená / červená
+      span.appendChild(badge);
+    }
+  })();
+
 
   const body=panel.querySelector('#shopchat-body');
   const input=panel.querySelector('input');
