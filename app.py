@@ -38,10 +38,12 @@ INTENTS = {
     "čistenie exteriéru": "🚘 Detailné čistenie exteriéru 💦✨ Tvoj lak si zaslúži špeciálnu starostlivosť, nie rýchlu umyvárku 🧽 Každý centimeter karosérie dôkladne umyjeme, dekontaminujeme od hrdze, asfaltu a nečistôt 🧴🔧 Používame šetrné produkty, ktoré chránia lak a zanechajú hlboký lesk 🌞 Po našom čistení je auto hladké na dotyk, lesklé na pohľad a pripravené na ochranu 💪",
     "keramická ochrana": "🛡️ Keramická ochrana laku K2 Gravon – až na 5 rokov ✨ Dopraj svojmu autu trvácnu ochranu, ktorá hneď vidieť 👀 K2 Gravon vytvára tvrdý keramický štít, ktorý chráni lak pred UV žiarením, špinou, soľou aj chemikáliami 🚘💎 Auto ostáva dlhšie čisté, voda sa krásne odperľuje 💧 a lesk vydrží roky 🌞 To nie je len lesk – to je ochrana, ktorú cítiš na každom pohľade 🔥",
     "ochranná ppf fólia quap": "Keď chceš, aby tvoj lak vyzeral dlhodobo ako nový, je tu PPF fólia QUAP 🚘 Chráni pred škrabancami, kamienkami, hmyzom aj chemikáliami 🧤 Samoregeneračný povrch zahojí drobné škrabance teplom ☀️🔥 Lak zostáva dokonale lesklý, hladký a stále chránený 💧 To najlepšie, čo môžeš dať svojmu autu.",
+    # >>> PRIDANÉ: Strojné leštenie (nič iné nemenené)
+    "strojné leštenie": "✨ Strojné leštenie laku ✨\nLeštenie nie je len o lesku – je to proces, pri ktorom navraciame laku hĺbku, jas a zrkadlový odraz. 🔍✨\nPoužívame excentrické aj rotačné leštičky, vďaka čomu vieme prispôsobiť postup presne podľa stavu laku.\n🔹 Jednokrokové leštenie – odstráni približne 60–70 % nedokonalostí, ideálne pri menej poškodenom laku.\n🔹 Viackrokové leštenie – dokáže dosiahnuť až 90–95 % korekcie, čím sa lak dostáva do takmer dokonalého stavu. 💎\nPred samotným leštením vždy auto dôkladne umyjeme, dekontaminujeme a pripravíme povrch. Každý detail riešime so zákazníkom osobne – vysvetlíme, čo sa dá spraviť, čo má zmysel a čo by bolo zbytočné. 🤝\n💰 Cena strojného leštenia začína od 200 €\nV cene jednokrokového leštenia je zahrnuté aj kompletné umytie a dekontaminácia laku.\n🚘 Výsledok? Auto, ktoré znovu žiari – ako nové",
     "cenník": "<a href='https://gavatep.eu/cennik' target='_blank' rel='noopener'>💰 Otvor stránku Cenník</a>",
 }
 
-SUGGESTIONS = ["Cenník","Renovácia svetlometov","Čistenie interiéru","Čistenie exteriéru","Keramická ochrana","Ochranná PPF fólia Quap"]
+SUGGESTIONS = ["Cenník","Renovácia svetlometov","Čistenie interiéru","Čistenie exteriéru","Keramická ochrana","Ochranná PPF fólia Quap","Strojné leštenie"]
 
 
 # --- FRONTEND ---
@@ -52,7 +54,9 @@ WIDGET_JS = r"""
     "čistenie interiéru": `""" + INTENTS["čistenie interiéru"] + """`,
     "čistenie exteriéru": `""" + INTENTS["čistenie exteriéru"] + """`,
     "keramická ochrana": `""" + INTENTS["keramická ochrana"] + """`,
-    "ochranná ppf fólia quap": `""" + INTENTS["ochranná ppf fólia quap"] + """`
+    "ochranná ppf fólia quap": `""" + INTENTS["ochranná ppf fólia quap"] + """`,
+    // >>> PRIDANÉ v RESPONSES
+    "strojné leštenie": `""" + INTENTS["strojné leštenie"] + """`
   };
 
   // 💬 bublina vpravo dole
@@ -169,7 +173,8 @@ alebo prémiové riešenie – PPF fóliu, ktorá chráni pred UV žiarením, š
 
   function addSuggestions(){
     const b=document.createElement('div');b.className='suggestions';
-    ["Cenník","Renovácia svetlometov","Čistenie interiéru","Čistenie exteriéru","Keramická ochrana","Ochranná PPF fólia Quap"].forEach(t=>{
+    // >>> PRIDANÉ "Strojné leštenie" do menu tlačidiel
+    ["Cenník","Renovácia svetlometov","Čistenie interiéru","Čistenie exteriéru","Keramická ochrana","Ochranná PPF fólia Quap","Strojné leštenie"].forEach(t=>{
       const btn=document.createElement('button');btn.textContent=t;
       btn.onclick=()=>{
         addMsg(t,'user');
