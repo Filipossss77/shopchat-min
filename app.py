@@ -44,6 +44,40 @@ INTENTS = {
 }
 
 SUGGESTIONS = ["Cenník","Renovácia svetlometov","Čistenie interiéru","Čistenie exteriéru","Keramická ochrana","Ochranná PPF fólia Quap","Strojné leštenie"]
+  "strojné leštenie": `""" + INTENTS["strojné leštenie"] + """`
+}; // ← sem presne pod tento riadok vlož ten nový blok ↓
+
+// --- PRIDANÉ: WhatsApp čísla + pozdravy
+const WHATSAPP_FILIP = '421948989873';
+const WHATSAPP_KIKA  = '421907050206';
+
+const GREETINGS = [
+  'ahoj','čau','cau','čaute','caute','čaw','caw',
+  'dobrý deň','dobry den','pekný deň','pekny den','zdravím','zdravim','servus'
+];
+
+function isGreeting(txt){
+  const t = (txt||'').toLowerCase().trim();
+  if (t.length>=2 && t.length<=20){
+    return GREETINGS.some(g => t === g || t.includes(g));
+  }
+  return GREETINGS.some(g => t === g);
+}
+
+function askToConnect(){
+  addMsg('Chceš sa spojiť s našimi detailermi? Je tu Kika a Filip.','bot');
+  addButtons(['Napísať Kike na WhatsApp','Napísať Filipovi na WhatsApp'], (label, wrap)=>{
+    addMsg(label,'user');
+    wrap.remove();
+    if(label.includes('Kike')){
+      const text = encodeURIComponent('Ahoj Kika, píšem z webu ohľadom detailingu.');
+      window.location.href = `https://wa.me/${WHATSAPP_KIKA}?text=${text}`;
+    } else {
+      const text = encodeURIComponent('Ahoj Filip, píšem z webu ohľadom detailingu.');
+      window.location.href = `https://wa.me/${WHATSAPP_FILIP}?text=${text}`;
+    }
+  }, 'actions contact');
+}
 
 
 # --- FRONTEND ---
@@ -271,6 +305,11 @@ bubble.addEventListener('click', () => {
     if(!v)return;
     addMsg(v,'user');input.value='';
     const low=v.toLowerCase();
+   // PRIDANÉ: ak je to pozdrav, ponúkni WhatsApp kontakt
+if (isGreeting(v)) {
+  setTimeout(()=>askToConnect(), 120);
+  return;
+} 
     if(RESPONSES[low]){
       setTimeout(()=>{
         addMsg(RESPONSES[low],'bot');
