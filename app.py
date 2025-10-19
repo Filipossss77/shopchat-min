@@ -200,9 +200,10 @@ alebo prémiové riešenie – PPF fóliu, ktorá chráni pred UV žiarením, š
   };
   panel.querySelector('#closechat').onclick=()=>panel.style.display='none';
 
-  // prvé otvorenie = len MENU (bez pozdravu)
+  // prvé otvorenie = POZDRAV + MENU (vrátené podľa želania)
   bubble.addEventListener('click', () => {
     if (!body.dataset.init) {
+      addMsg('Ahoj ! Ako sa máš ? S čím ti môžem pomôcť ?','bot');
       addSuggestions();
       body.dataset.init = '1';
     }
@@ -227,15 +228,11 @@ alebo prémiové riešenie – PPF fóliu, ktorá chráni pred UV žiarením, š
       // zobraziť s jemnou animáciou
       requestAnimationFrame(() => tip.classList.add('visible'));
 
-      // klik na teaser = otvorí chat (so zvukom) a rovno menu
+      // klik na teaser = otvorí chat (so zvukom) a rovno pozdrav + menu
       tip.addEventListener('click', () => {
         tip.remove();
         bubble.classList.remove('has-badge');
         bubble.click(); // spustí existujúci handler so zvukom
-        if (!body.dataset.init) {
-          addSuggestions();
-          body.dataset.init = '1';
-        }
       });
 
       // zapamätať, že sme už ukázali v tejto session
@@ -321,7 +318,7 @@ WIDGET_CSS = r"""
 .ppf-card .t{font-weight:700;color:var(--gold);margin-bottom:4px;}
 .ppf-card .d{font-size:13px;opacity:.9;}
 .ppf-card .p{margin-top:6px;font-weight:700;}
-/* ---------- NOVÉ: badge + klikateľný teaser ---------- */
+/* ---------- badge + klikateľný teaser ---------- */
 #shopchat-bubble.has-badge::after{
   content:"";
   position:absolute;
@@ -393,6 +390,7 @@ async def message(payload: dict):
     else:
         reply = "Rozumiem. Môžem poslať info o službách alebo cenník."
     return JSONResponse({"reply": reply, "suggestions": SUGGESTIONS})
+
 
 
 
