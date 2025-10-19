@@ -170,7 +170,7 @@ WIDGET_JS = r"""
 })();
 """
 
-WIDGET_CSS = r"""(tvoj CSS tu ostáva celý tak, ako bol – nemenil sa)"""
+WIDGET_CSS = r"""(tvoj CSS zostáva bez zmeny)"""
 
 app = FastAPI(title="GaVaTep Chat")
 app.add_middleware(
@@ -209,6 +209,7 @@ async def message(payload: dict):
     else:
         reply = "Rozumiem. Môžem poslať info o službách alebo cenník."
     return JSONResponse({"reply": reply, "suggestions": SUGGESTIONS})
+
 
 
 
