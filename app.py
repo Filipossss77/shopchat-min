@@ -203,6 +203,23 @@ alebo prémiové riešenie – PPF fóliu, ktorá chráni pred UV žiarením, š
     audio.currentTime = 0;
     audio.play().catch(()=>{});
   };
+  // --- PRIDANÉ: badge "otvorené/zatvorené" v hlavičke ---
+(function(){
+  const span = panel.querySelector('#shopchat-header span');
+  if (span && !span.querySelector('.open-badge')) {
+    function isOpenNow(d=new Date()){
+      const h = d.getHours();
+      return h>=8 && h<20; // každý deň 8:00–20:00
+    }
+    const badge = document.createElement('small');
+    badge.className = 'open-badge';
+    badge.textContent = isOpenNow() ? '• otvorené' : '• zatvorené';
+    badge.style.marginLeft = '8px';
+    badge.style.opacity = '0.85';
+    span.appendChild(badge);
+  }
+})();
+
   panel.querySelector('#closechat').onclick=()=>panel.style.display='none';
 
   // prvé otvorenie = POZDRAV + MENU (vrátené podľa želania)
