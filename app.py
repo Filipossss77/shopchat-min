@@ -45,7 +45,23 @@ INTENTS = {
 
 SUGGESTIONS = ["Cenník","Renovácia svetlometov","Čistenie interiéru","Čistenie exteriéru","Keramická ochrana","Ochranná PPF fólia Quap","Strojné leštenie"]
   "strojné leštenie": `""" + INTENTS["strojné leštenie"] + """`
-}; // ← sem presne pod tento riadok vlož ten nový blok ↓
+
+}
+
+
+# --- FRONTEND ---
+WIDGET_JS = r"""
+(function(){
+  const RESPONSES = {
+    "renovácia svetlometov": `""" + INTENTS["renovácia svetlometov"] + """`,
+    "čistenie interiéru": `""" + INTENTS["čistenie interiéru"] + """`,
+    "čistenie exteriéru": `""" + INTENTS["čistenie exteriéru"] + """`,
+    "keramická ochrana": `""" + INTENTS["keramická ochrana"] + """`,
+    "ochranná ppf fólia quap": `""" + INTENTS["ochranná ppf fólia quap"] + """`,
+    // >>> PRIDANÉ v RESPONSES
+    "strojné leštenie": `""" + INTENTS["strojné leštenie"] + """`
+  };
+  }; // ← sem presne pod tento riadok vlož ten nový blok ↓
 
 // --- PRIDANÉ: WhatsApp čísla + pozdravy
 const WHATSAPP_FILIP = '421948989873';
@@ -77,21 +93,6 @@ function askToConnect(){
       window.location.href = `https://wa.me/${WHATSAPP_FILIP}?text=${text}`;
     }
   }, 'actions contact');
-}
-
-
-# --- FRONTEND ---
-WIDGET_JS = r"""
-(function(){
-  const RESPONSES = {
-    "renovácia svetlometov": `""" + INTENTS["renovácia svetlometov"] + """`,
-    "čistenie interiéru": `""" + INTENTS["čistenie interiéru"] + """`,
-    "čistenie exteriéru": `""" + INTENTS["čistenie exteriéru"] + """`,
-    "keramická ochrana": `""" + INTENTS["keramická ochrana"] + """`,
-    "ochranná ppf fólia quap": `""" + INTENTS["ochranná ppf fólia quap"] + """`,
-    // >>> PRIDANÉ v RESPONSES
-    "strojné leštenie": `""" + INTENTS["strojné leštenie"] + """`
-  };
 
   // 💬 bublina vpravo dole
   const bubble = document.createElement('div');
