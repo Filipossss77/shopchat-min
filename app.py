@@ -191,7 +191,7 @@ alebo prémiové riešenie – PPF fóliu, ktorá chráni pred UV žiarením, š
     body.appendChild(b);
   }
 
-  // otváranie/closing
+  // otváranie/closing (zvuk ostáva)
   const audio = new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
   bubble.onclick=()=>{
     panel.style.display='flex';
@@ -200,14 +200,48 @@ alebo prémiové riešenie – PPF fóliu, ktorá chráni pred UV žiarením, š
   };
   panel.querySelector('#closechat').onclick=()=>panel.style.display='none';
 
-  // prvé otvorenie = pozdrav + návrhy
-  bubble.addEventListener('click',()=>{
-    if(!body.dataset.init){
-      addMsg('Ahoj 👋 Ako ti môžem pomôcť?','bot');
+  // prvé otvorenie = len MENU (bez pozdravu)
+  bubble.addEventListener('click', () => {
+    if (!body.dataset.init) {
       addSuggestions();
-      body.dataset.init='1';
+      body.dataset.init = '1';
     }
   });
+
+  // --- prvonávštevový teaser "Máš správu – klikni" (iba raz za session) ---
+  (function setupTeaser(){
+    try {
+      if (sessionStorage.getItem('shopchat_teased')) return;
+
+      // červený badge na bubline
+      bubble.classList.add('has-badge');
+
+      // bublinková správa nad bublinou
+      const tip = document.createElement('div');
+      tip.id = 'shopchat-teaser';
+      tip.setAttribute('role','status');
+      tip.setAttribute('aria-live','polite');
+      tip.textContent = 'Máš správu – klikni';
+      document.body.appendChild(tip);
+
+      // zobraziť s jemnou animáciou
+      requestAnimationFrame(() => tip.classList.add('visible'));
+
+      // klik na teaser = otvorí chat (so zvukom) a rovno menu
+      tip.addEventListener('click', () => {
+        tip.remove();
+        bubble.classList.remove('has-badge');
+        bubble.click(); // spustí existujúci handler so zvukom
+        if (!body.dataset.init) {
+          addSuggestions();
+          body.dataset.init = '1';
+        }
+      });
+
+      // zapamätať, že sme už ukázali v tejto session
+      sessionStorage.setItem('shopchat_teased','1');
+    } catch(_) {}
+  })();
 
   // odoslanie textu
   function sendIfNotEmpty(){
@@ -287,6 +321,41 @@ WIDGET_CSS = r"""
 .ppf-card .t{font-weight:700;color:var(--gold);margin-bottom:4px;}
 .ppf-card .d{font-size:13px;opacity:.9;}
 .ppf-card .p{margin-top:6px;font-weight:700;}
+/* ---------- NOVÉ: badge + klikateľný teaser ---------- */
+#shopchat-bubble.has-badge::after{
+  content:"";
+  position:absolute;
+  top:6px; right:6px;
+  width:10px; height:10px;
+  border-radius:50%;
+  background:#ff4d4f;
+  box-shadow:0 0 0 4px rgba(255,77,79,0.2);
+}
+#shopchat-teaser{
+  position:fixed;
+  right:20px;
+  bottom:96px; /* nad bublinou */
+  padding:8px 10px;
+  background:var(--bg2);
+  color:var(--text);
+  border:1px solid var(--muted);
+  border-radius:10px;
+  font:13px var(--font);
+  opacity:0;
+  transform:translateY(6px);
+  transition:opacity .25s ease, transform .25s ease;
+  z-index:999999;
+  pointer-events:auto;
+  cursor:pointer;
+  box-shadow:0 10px 30px rgba(0,0,0,.35);
+}
+#shopchat-teaser.visible{
+  opacity:1;
+  transform:translateY(0);
+}
+#shopchat-teaser:hover{
+  filter:brightness(1.05);
+}
 """
 
 app = FastAPI(title="GaVaTep Chat")
@@ -324,6 +393,7 @@ async def message(payload: dict):
     else:
         reply = "Rozumiem. Môžem poslať info o službách alebo cenník."
     return JSONResponse({"reply": reply, "suggestions": SUGGESTIONS})
+
 
 
 
