@@ -203,7 +203,7 @@ alebo prémiové riešenie – PPF fóliu, ktorá chráni pred UV žiarením, š
   // prvé otvorenie = POZDRAV + MENU (vrátené podľa želania)
   bubble.addEventListener('click', () => {
     if (!body.dataset.init) {
-      addMsg('Ahoj ! Ako sa máš ? S čim ti mozem pomoct ?','bot');
+      addMsg('Ahoj ! Ako sa máš ? S čím ti môžem pomôcť ?','bot');
       addSuggestions();
       body.dataset.init = '1';
     }
