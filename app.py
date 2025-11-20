@@ -4,10 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 import os, ssl, smtplib
 from email.message import EmailMessage
 
-from openai import OpenAI
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
 SMTP_USER = os.getenv("SMTP_USER", "tepovacieprace.gava@gmail.com")
@@ -445,10 +441,7 @@ async def widget_css():
 
 @app.post("/api/message")
 async def message(payload: dict):
-    text_raw = (payload.get("text") or "").strip()
-    text = text_raw.lower()
-
-    # --- Preddefinované odpovede ---
+    text = (payload.get("text") or "").lower()
     if "cenn" in text:
         reply = INTENTS["cenník"]
     elif "svetlo" in text:
@@ -463,33 +456,8 @@ async def message(payload: dict):
         reply = INTENTS["ochranná ppf fólia quap"]
     elif "lešten" in text or "lesteni" in text:
         reply = INTENTS["strojné leštenie"]
-
     else:
-        # --- GPT odpoveď ---
-        try:
-            completion = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "Si GaVaTep AI asistent. Odpovedáš po slovensky, stručne a odborne. "
-                            "Vieš všetko o detailingu, PPF, keramike, leštení, interiéri, exteriéri a cenách."
-                        )
-                    },
-                    {"role": "user", "content": text_raw}
-                ]
-            )
-           reply = completion.choices[0].message["content"]
-
-
-        except Exception as e:
-            print("GPT_ERROR:", e)
-            reply = "Ospravedlňujem sa, niečo sa pokazilo. Skús to prosím znova 🙂"
-
+        reply = "Rozumiem. Môžem poslať info o službách alebo cenník."
     return JSONResponse({"reply": reply, "suggestions": SUGGESTIONS})
-
-
-
 
 
